@@ -45,6 +45,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [LoggerTypeId](#loggertypeid)
   - [LoggerTypeId (type alias)](#loggertypeid-type-alias)
+- [utils](#utils)
+  - [Logger (namespace)](#logger-namespace)
+    - [Variance (interface)](#variance-interface)
 - [zipping](#zipping)
   - [zip](#zip)
   - [zipLeft](#zipleft)
@@ -401,6 +404,27 @@ Added in v1.0.0
 
 ```ts
 export type LoggerTypeId = typeof LoggerTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Logger (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Message, Output> {
+  readonly [LoggerTypeId]: {
+    readonly _Message: (_: Message) => void
+    readonly _Output: (_: never) => Output
+  }
+}
 ```
 
 Added in v1.0.0

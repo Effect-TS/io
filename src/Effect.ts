@@ -371,9 +371,15 @@ export const allWith: <
  * @since 1.0.0
  */
 export declare namespace All {
-  type EffectAny = Effect<any, any, any>
+  /**
+   * @since 1.0.0
+   */
+  export type EffectAny = Effect<any, any, any>
 
-  type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Mode> = [T] extends
+  /**
+   * @since 1.0.0
+   */
+  export type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Mode> = [T] extends
     [Iterable<Effect.Variance<infer R, infer E, infer A>>] ? Effect<
       R,
       Mode extends "either" ? never
@@ -383,7 +389,10 @@ export declare namespace All {
     >
     : never
 
-  type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Mode> = Effect<
+  /**
+   * @since 1.0.0
+   */
+  export type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Mode> = Effect<
     T[number] extends never ? never
       : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
       : never,
@@ -405,7 +414,10 @@ export declare namespace All {
       : { -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? _A : never }
   > extends infer X ? X : never
 
-  type ReturnObject<T, Discard extends boolean, Mode> = [T] extends [{ [K: string]: EffectAny }] ? Effect<
+  /**
+   * @since 1.0.0
+   */
+  export type ReturnObject<T, Discard extends boolean, Mode> = [T] extends [{ [K: string]: EffectAny }] ? Effect<
       keyof T extends never ? never
         : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R
         : never,
@@ -427,9 +439,18 @@ export declare namespace All {
     >
     : never
 
-  type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
-  type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : "default"
+  /**
+   * @since 1.0.0
+   */
+  export type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+  /**
+   * @since 1.0.0
+   */
+  export type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : "default"
 
+  /**
+   * @since 1.0.0
+   */
   export type Return<
     Arg extends Iterable<EffectAny> | Record<string, EffectAny>,
     O extends {

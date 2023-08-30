@@ -26,6 +26,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [PoolTypeId](#pooltypeid)
   - [PoolTypeId (type alias)](#pooltypeid-type-alias)
+- [utils](#utils)
+  - [Pool (namespace)](#pool-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -190,6 +193,27 @@ Added in v1.0.0
 
 ```ts
 export type PoolTypeId = typeof PoolTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Pool (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E, A> {
+  readonly [PoolTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

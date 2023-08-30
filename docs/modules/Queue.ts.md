@@ -47,6 +47,10 @@ Added in v1.0.0
   - [QueueStrategyTypeId](#queuestrategytypeid)
   - [QueueStrategyTypeId (type alias)](#queuestrategytypeid-type-alias)
 - [utils](#utils)
+  - [Queue (namespace)](#queue-namespace)
+    - [DequeueVariance (interface)](#dequeuevariance-interface)
+    - [EnqueueVariance (interface)](#enqueuevariance-interface)
+    - [StrategyVariance (interface)](#strategyvariance-interface)
   - [awaitShutdown](#awaitshutdown)
   - [offer](#offer)
   - [offerAll](#offerall)
@@ -581,6 +585,52 @@ export type QueueStrategyTypeId = typeof QueueStrategyTypeId
 Added in v1.0.0
 
 # utils
+
+## Queue (namespace)
+
+Added in v1.0.0
+
+### DequeueVariance (interface)
+
+**Signature**
+
+```ts
+export interface DequeueVariance<A> {
+  readonly [DequeueTypeId]: {
+    readonly _Out: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### EnqueueVariance (interface)
+
+**Signature**
+
+```ts
+export interface EnqueueVariance<A> {
+  readonly [EnqueueTypeId]: {
+    readonly _In: (_: A) => void
+  }
+}
+```
+
+Added in v1.0.0
+
+### StrategyVariance (interface)
+
+**Signature**
+
+```ts
+export interface StrategyVariance<A> {
+  readonly [QueueStrategyTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
 
 ## awaitShutdown
 

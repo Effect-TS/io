@@ -25,6 +25,15 @@ Added in v1.0.0
   - [MetricHookTypeId](#metrichooktypeid)
   - [MetricHookTypeId (type alias)](#metrichooktypeid-type-alias)
 - [utils](#utils)
+  - [MetricHook (namespace)](#metrichook-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [Counter (type alias)](#counter-type-alias)
+    - [Frequency (type alias)](#frequency-type-alias)
+    - [Gauge (type alias)](#gauge-type-alias)
+    - [Histogram (type alias)](#histogram-type-alias)
+    - [Root (type alias)](#root-type-alias)
+    - [Summary (type alias)](#summary-type-alias)
+    - [Untyped (type alias)](#untyped-type-alias)
   - [onUpdate](#onupdate)
 
 ---
@@ -132,6 +141,95 @@ export type MetricHookTypeId = typeof MetricHookTypeId
 Added in v1.0.0
 
 # utils
+
+## MetricHook (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<In, Out> {
+  readonly [MetricHookTypeId]: {
+    readonly _In: (_: In) => void
+    readonly _Out: (_: never) => Out
+  }
+}
+```
+
+Added in v1.0.0
+
+### Counter (type alias)
+
+**Signature**
+
+```ts
+export type Counter = MetricHook<number, MetricState.MetricState.Counter>
+```
+
+Added in v1.0.0
+
+### Frequency (type alias)
+
+**Signature**
+
+```ts
+export type Frequency = MetricHook<string, MetricState.MetricState.Frequency>
+```
+
+Added in v1.0.0
+
+### Gauge (type alias)
+
+**Signature**
+
+```ts
+export type Gauge = MetricHook<number, MetricState.MetricState.Gauge>
+```
+
+Added in v1.0.0
+
+### Histogram (type alias)
+
+**Signature**
+
+```ts
+export type Histogram = MetricHook<number, MetricState.MetricState.Histogram>
+```
+
+Added in v1.0.0
+
+### Root (type alias)
+
+**Signature**
+
+```ts
+export type Root = MetricHook<any, MetricState.MetricState.Untyped>
+```
+
+Added in v1.0.0
+
+### Summary (type alias)
+
+**Signature**
+
+```ts
+export type Summary = MetricHook<readonly [number, number], MetricState.MetricState.Summary>
+```
+
+Added in v1.0.0
+
+### Untyped (type alias)
+
+**Signature**
+
+```ts
+export type Untyped = MetricHook<any, any>
+```
+
+Added in v1.0.0
 
 ## onUpdate
 

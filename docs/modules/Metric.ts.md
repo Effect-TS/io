@@ -63,6 +63,13 @@ Added in v1.0.0
 - [unsafe](#unsafe)
   - [unsafeSnapshot](#unsafesnapshot)
 - [utils](#utils)
+  - [Metric (namespace)](#metric-namespace)
+    - [Counter (interface)](#counter-interface)
+    - [Frequency (interface)](#frequency-interface)
+    - [Gauge (interface)](#gauge-interface)
+    - [Histogram (interface)](#histogram-interface)
+    - [Summary (interface)](#summary-interface)
+    - [Variance (interface)](#variance-interface)
   - [tagged](#tagged)
   - [taggedWithLabels](#taggedwithlabels)
   - [taggedWithLabelsInput](#taggedwithlabelsinput)
@@ -728,6 +735,78 @@ export declare const unsafeSnapshot: (_: void) => HashSet.HashSet<MetricPair.Met
 Added in v1.0.0
 
 # utils
+
+## Metric (namespace)
+
+Added in v1.0.0
+
+### Counter (interface)
+
+**Signature**
+
+```ts
+export interface Counter<In> extends Metric<MetricKeyType.MetricKeyType.Counter, In, MetricState.MetricState.Counter> {}
+```
+
+Added in v1.0.0
+
+### Frequency (interface)
+
+**Signature**
+
+```ts
+export interface Frequency<In>
+  extends Metric<MetricKeyType.MetricKeyType.Frequency, In, MetricState.MetricState.Frequency> {}
+```
+
+Added in v1.0.0
+
+### Gauge (interface)
+
+**Signature**
+
+```ts
+export interface Gauge<In> extends Metric<MetricKeyType.MetricKeyType.Gauge, In, MetricState.MetricState.Gauge> {}
+```
+
+Added in v1.0.0
+
+### Histogram (interface)
+
+**Signature**
+
+```ts
+export interface Histogram<In>
+  extends Metric<MetricKeyType.MetricKeyType.Histogram, In, MetricState.MetricState.Histogram> {}
+```
+
+Added in v1.0.0
+
+### Summary (interface)
+
+**Signature**
+
+```ts
+export interface Summary<In> extends Metric<MetricKeyType.MetricKeyType.Summary, In, MetricState.MetricState.Summary> {}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Type, In, Out> {
+  readonly [MetricTypeId]: {
+    readonly _Type: (_: Type) => Type
+    readonly _In: (_: In) => void
+    readonly _Out: (_: never) => Out
+  }
+}
+```
+
+Added in v1.0.0
 
 ## tagged
 

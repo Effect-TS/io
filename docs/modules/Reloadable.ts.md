@@ -27,6 +27,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ReloadableTypeId](#reloadabletypeid)
   - [ReloadableTypeId (type alias)](#reloadabletypeid-type-alias)
+- [utils](#utils)
+  - [Reloadable (namespace)](#reloadable-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -188,6 +191,26 @@ Added in v1.0.0
 
 ```ts
 export type ReloadableTypeId = typeof ReloadableTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Reloadable (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [ReloadableTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

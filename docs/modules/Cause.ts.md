@@ -132,6 +132,9 @@ Added in v1.0.0
   - [RuntimeExceptionTypeId (type alias)](#runtimeexceptiontypeid-type-alias)
   - [SpanAnnotationTypeId](#spanannotationtypeid)
   - [SpanAnnotationTypeId (type alias)](#spanannotationtypeid-type-alias)
+- [utils](#utils)
+  - [Cause (namespace)](#cause-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -1317,6 +1320,26 @@ Added in v1.0.0
 
 ```ts
 export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Cause (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E> {
+  readonly [CauseTypeId]: {
+    readonly _E: (_: never) => E
+  }
+}
 ```
 
 Added in v1.0.0

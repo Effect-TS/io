@@ -18,6 +18,8 @@ Added in v1.0.0
   - [get](#get)
 - [models](#models)
   - [Ref (interface)](#ref-interface)
+  - [Ref (namespace)](#ref-namespace)
+    - [Variance (interface)](#variance-interface)
 - [symbols](#symbols)
   - [RefTypeId](#reftypeid)
   - [RefTypeId (type alias)](#reftypeid-type-alias)
@@ -71,6 +73,24 @@ Added in v1.0.0
 ```ts
 export interface Ref<A> extends Ref.Variance<A>, Pipeable {
   modify<B>(f: (a: A) => readonly [B, A]): Effect.Effect<never, never, B>
+}
+```
+
+Added in v1.0.0
+
+## Ref (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [RefTypeId]: {
+    readonly _A: (_: never) => A
+  }
 }
 ```
 

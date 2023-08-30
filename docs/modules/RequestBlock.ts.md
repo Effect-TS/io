@@ -23,6 +23,8 @@ Added in v1.0.0
   - [Empty (interface)](#empty-interface)
   - [Par (interface)](#par-interface)
   - [RequestBlock (type alias)](#requestblock-type-alias)
+  - [RequestBlock (namespace)](#requestblock-namespace)
+    - [Reducer (interface)](#reducer-interface)
   - [Seq (interface)](#seq-interface)
   - [Single (interface)](#single-interface)
 - [utils](#utils)
@@ -139,6 +141,28 @@ preserving ordering guarantees.
 
 ```ts
 export type RequestBlock<R> = Empty | Par<R> | Seq<R> | Single<R>
+```
+
+Added in v1.0.0
+
+## RequestBlock (namespace)
+
+Added in v1.0.0
+
+### Reducer (interface)
+
+**Signature**
+
+```ts
+export interface Reducer<R, Z> {
+  readonly emptyCase: () => Z
+  readonly parCase: (left: Z, right: Z) => Z
+  readonly singleCase: (
+    dataSource: RequestResolver.RequestResolver<unknown, R>,
+    blockedRequest: Request.Entry<unknown>
+  ) => Z
+  readonly seqCase: (left: Z, right: Z) => Z
+}
 ```
 
 Added in v1.0.0

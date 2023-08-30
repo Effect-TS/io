@@ -37,6 +37,8 @@ Added in v1.0.0
   - [RequestResolverTypeId](#requestresolvertypeid)
   - [RequestResolverTypeId (type alias)](#requestresolvertypeid-type-alias)
 - [utils](#utils)
+  - [RequestResolver (namespace)](#requestresolver-namespace)
+    - [Variance (interface)](#variance-interface)
   - [contextFromEffect](#contextfromeffect)
   - [contextFromServices](#contextfromservices)
 
@@ -377,6 +379,25 @@ export type RequestResolverTypeId = typeof RequestResolverTypeId
 Added in v1.0.0
 
 # utils
+
+## RequestResolver (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<R, A> {
+  readonly [RequestResolverTypeId]: {
+    readonly _R: (_: never) => R
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
 
 ## contextFromEffect
 

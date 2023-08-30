@@ -27,6 +27,9 @@ Added in v1.0.0
   - [ConfigSecretTypeId (type alias)](#configsecrettypeid-type-alias)
 - [unsafe](#unsafe)
   - [unsafeWipe](#unsafewipe)
+- [utils](#utils)
+  - [ConfigSecret (namespace)](#configsecret-namespace)
+    - [Proto (interface)](#proto-interface)
 
 ---
 
@@ -131,6 +134,24 @@ Added in v1.0.0
 
 ```ts
 export declare const unsafeWipe: (self: ConfigSecret) => void
+```
+
+Added in v1.0.0
+
+# utils
+
+## ConfigSecret (namespace)
+
+Added in v1.0.0
+
+### Proto (interface)
+
+**Signature**
+
+```ts
+export interface Proto {
+  readonly [ConfigSecretTypeId]: ConfigSecretTypeId
+}
 ```
 
 Added in v1.0.0

@@ -86,6 +86,9 @@ Added in v1.0.0
   - [ScheduleTypeId](#scheduletypeid)
   - [ScheduleTypeId (type alias)](#scheduletypeid-type-alias)
 - [utils](#utils)
+  - [Schedule (namespace)](#schedule-namespace)
+    - [DriverVariance (interface)](#drivervariance-interface)
+    - [Variance (interface)](#variance-interface)
   - [addDelay](#adddelay)
   - [addDelayEffect](#adddelayeffect)
   - [bothInOut](#bothinout)
@@ -1175,6 +1178,42 @@ export type ScheduleTypeId = typeof ScheduleTypeId
 Added in v1.0.0
 
 # utils
+
+## Schedule (namespace)
+
+Added in v1.0.0
+
+### DriverVariance (interface)
+
+**Signature**
+
+```ts
+export interface DriverVariance<Env, In, Out> {
+  readonly [ScheduleDriverTypeId]: {
+    readonly _Env: (_: never) => Env
+    readonly _In: (_: In) => void
+    readonly _Out: (_: never) => Out
+  }
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Env, In, Out> {
+  readonly [ScheduleTypeId]: {
+    readonly _Env: (_: never) => Env
+    readonly _In: (_: In) => void
+    readonly _Out: (_: never) => Out
+  }
+}
+```
+
+Added in v1.0.0
 
 ## addDelay
 

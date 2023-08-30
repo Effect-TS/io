@@ -21,6 +21,8 @@ Added in v1.0.0
 - [models](#models)
   - [Cache (interface)](#cache-interface)
   - [Entry (interface)](#entry-interface)
+  - [Entry (namespace)](#entry-namespace)
+    - [Variance (interface)](#variance-interface)
   - [Listeners (interface)](#listeners-interface)
   - [Request (interface)](#request-interface)
   - [makeCache](#makecache)
@@ -37,6 +39,14 @@ Added in v1.0.0
   - [EntryTypeId (type alias)](#entrytypeid-type-alias)
   - [RequestTypeId](#requesttypeid)
   - [RequestTypeId (type alias)](#requesttypeid-type-alias)
+- [utils](#utils)
+  - [Request (namespace)](#request-namespace)
+    - [Constructor (interface)](#constructor-interface)
+    - [Variance (interface)](#variance-interface-1)
+    - [Error (type alias)](#error-type-alias)
+    - [OptionalResult (type alias)](#optionalresult-type-alias)
+    - [Result (type alias)](#result-type-alias)
+    - [Success (type alias)](#success-type-alias)
 
 ---
 
@@ -137,6 +147,24 @@ export interface Entry<R> extends Entry.Variance<R> {
   readonly ownerId: FiberId
   readonly state: {
     completed: boolean
+  }
+}
+```
+
+Added in v1.0.0
+
+## Entry (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<R> {
+  readonly [EntryTypeId]: {
+    readonly _R: (_: never) => R
   }
 }
 ```
@@ -322,6 +350,89 @@ Added in v1.0.0
 
 ```ts
 export type RequestTypeId = typeof RequestTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Request (namespace)
+
+Added in v1.0.0
+
+### Constructor (interface)
+
+**Signature**
+
+```ts
+export interface Constructor<R extends Request<any, any>, T extends keyof R = never> {
+  (args: Omit<R, T | keyof (Data.Case & Request.Variance<Request.Error<R>, Request.Success<R>>)>): R
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E, A> {
+  readonly [RequestTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### Error (type alias)
+
+A utility type to extract the error type from a `Request`.
+
+**Signature**
+
+```ts
+export type Error<T extends Request<any, any>> = [T] extends [Request<infer _E, infer _A>] ? _E : never
+```
+
+Added in v1.0.0
+
+### OptionalResult (type alias)
+
+A utility type to extract the optional result type from a `Request`.
+
+**Signature**
+
+```ts
+export type OptionalResult<T extends Request<any, any>> = T extends Request<infer E, infer A>
+  ? Exit.Exit<E, Option.Option<A>>
+  : never
+```
+
+Added in v1.0.0
+
+### Result (type alias)
+
+A utility type to extract the result type from a `Request`.
+
+**Signature**
+
+```ts
+export type Result<T extends Request<any, any>> = T extends Request<infer E, infer A> ? Exit.Exit<E, A> : never
+```
+
+Added in v1.0.0
+
+### Success (type alias)
+
+A utility type to extract the value type from a `Request`.
+
+**Signature**
+
+```ts
+export type Success<T extends Request<any, any>> = [T] extends [Request<infer _E, infer _A>] ? _A : never
 ```
 
 Added in v1.0.0

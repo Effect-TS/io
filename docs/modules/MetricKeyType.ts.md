@@ -40,6 +40,17 @@ Added in v1.0.0
   - [MetricKeyTypeTypeId (type alias)](#metrickeytypetypeid-type-alias)
   - [SummaryKeyTypeTypeId](#summarykeytypetypeid)
   - [SummaryKeyTypeTypeId (type alias)](#summarykeytypetypeid-type-alias)
+- [utils](#utils)
+  - [MetricKeyType (namespace)](#metrickeytype-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [Counter (type alias)](#counter-type-alias)
+    - [Frequency (type alias)](#frequency-type-alias)
+    - [Gauge (type alias)](#gauge-type-alias)
+    - [Histogram (type alias)](#histogram-type-alias)
+    - [InType (type alias)](#intype-type-alias)
+    - [OutType (type alias)](#outtype-type-alias)
+    - [Summary (type alias)](#summary-type-alias)
+    - [Untyped (type alias)](#untyped-type-alias)
 
 ---
 
@@ -292,6 +303,138 @@ Added in v1.0.0
 
 ```ts
 export type SummaryKeyTypeTypeId = typeof SummaryKeyTypeTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## MetricKeyType (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<In, Out> {
+  readonly [MetricKeyTypeTypeId]: {
+    readonly _In: (_: In) => void
+    readonly _Out: (_: never) => Out
+  }
+}
+```
+
+Added in v1.0.0
+
+### Counter (type alias)
+
+**Signature**
+
+```ts
+export type Counter = MetricKeyType<number, MetricState.MetricState.Counter> & {
+  readonly [CounterKeyTypeTypeId]: CounterKeyTypeTypeId
+}
+```
+
+Added in v1.0.0
+
+### Frequency (type alias)
+
+**Signature**
+
+```ts
+export type Frequency = MetricKeyType<string, MetricState.MetricState.Frequency> & {
+  readonly [FrequencyKeyTypeTypeId]: FrequencyKeyTypeTypeId
+}
+```
+
+Added in v1.0.0
+
+### Gauge (type alias)
+
+**Signature**
+
+```ts
+export type Gauge = MetricKeyType<number, MetricState.MetricState.Gauge> & {
+  readonly [GaugeKeyTypeTypeId]: GaugeKeyTypeTypeId
+}
+```
+
+Added in v1.0.0
+
+### Histogram (type alias)
+
+**Signature**
+
+```ts
+export type Histogram = MetricKeyType<number, MetricState.MetricState.Histogram> & {
+  readonly [HistogramKeyTypeTypeId]: HistogramKeyTypeTypeId
+  readonly boundaries: MetricBoundaries.MetricBoundaries
+}
+```
+
+Added in v1.0.0
+
+### InType (type alias)
+
+**Signature**
+
+```ts
+export type InType<Type extends MetricKeyType<any, any>> = [Type] extends [
+  {
+    readonly [MetricKeyTypeTypeId]: {
+      readonly _In: (_: infer In) => void
+    }
+  }
+]
+  ? In
+  : never
+```
+
+Added in v1.0.0
+
+### OutType (type alias)
+
+**Signature**
+
+```ts
+export type OutType<Type extends MetricKeyType<any, any>> = [Type] extends [
+  {
+    readonly [MetricKeyTypeTypeId]: {
+      readonly _Out: (_: never) => infer Out
+    }
+  }
+]
+  ? Out
+  : never
+```
+
+Added in v1.0.0
+
+### Summary (type alias)
+
+**Signature**
+
+```ts
+export type Summary = MetricKeyType<readonly [number, number], MetricState.MetricState.Summary> & {
+  readonly [SummaryKeyTypeTypeId]: SummaryKeyTypeTypeId
+  readonly maxAge: Duration.Duration
+  readonly maxSize: number
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<number>
+}
+```
+
+Added in v1.0.0
+
+### Untyped (type alias)
+
+**Signature**
+
+```ts
+export type Untyped = MetricKeyType<any, any>
 ```
 
 Added in v1.0.0

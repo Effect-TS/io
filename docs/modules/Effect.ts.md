@@ -376,6 +376,20 @@ Added in v1.0.0
   - [unified](#unified)
   - [unifiedFn](#unifiedfn)
 - [utils](#utils)
+  - [All (namespace)](#all-namespace)
+    - [EffectAny (type alias)](#effectany-type-alias)
+    - [ExtractMode (type alias)](#extractmode-type-alias)
+    - [IsDiscard (type alias)](#isdiscard-type-alias)
+    - [Return (type alias)](#return-type-alias)
+    - [ReturnIterable (type alias)](#returniterable-type-alias)
+    - [ReturnObject (type alias)](#returnobject-type-alias)
+    - [ReturnTuple (type alias)](#returntuple-type-alias)
+  - [Effect (namespace)](#effect-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [Context (type alias)](#context-type-alias)
+    - [Error (type alias)](#error-type-alias)
+    - [Success (type alias)](#success-type-alias)
+    - [Unify (type alias)](#unify-type-alias)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
   - [withSchedulingPriority](#withschedulingpriority)
 - [zipping](#zipping)
@@ -6146,6 +6160,220 @@ export declare const unifiedFn: <Args extends readonly any[], Ret extends Effect
 Added in v1.0.0
 
 # utils
+
+## All (namespace)
+
+Added in v1.0.0
+
+### EffectAny (type alias)
+
+**Signature**
+
+```ts
+export type EffectAny = Effect<any, any, any>
+```
+
+Added in v1.0.0
+
+### ExtractMode (type alias)
+
+**Signature**
+
+```ts
+export type ExtractMode<A> = [A] extends [{ mode: infer M }] ? M : 'default'
+```
+
+Added in v1.0.0
+
+### IsDiscard (type alias)
+
+**Signature**
+
+```ts
+export type IsDiscard<A> = [Extract<A, { readonly discard: true }>] extends [never] ? false : true
+```
+
+Added in v1.0.0
+
+### Return (type alias)
+
+**Signature**
+
+```ts
+export type Return<
+  Arg extends Iterable<EffectAny> | Record<string, EffectAny>,
+  O extends {
+    readonly concurrency?: Concurrency
+    readonly batching?: boolean | 'inherit'
+    readonly discard?: boolean
+    readonly mode?: 'default' | 'validate' | 'either'
+  }
+> = [Arg] extends [ReadonlyArray<EffectAny>]
+  ? ReturnTuple<Arg, IsDiscard<O>, ExtractMode<O>>
+  : [Arg] extends [Iterable<EffectAny>]
+  ? ReturnIterable<Arg, IsDiscard<O>, ExtractMode<O>>
+  : [Arg] extends [Record<string, EffectAny>]
+  ? ReturnObject<Arg, IsDiscard<O>, ExtractMode<O>>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnIterable (type alias)
+
+**Signature**
+
+```ts
+export type ReturnIterable<T extends Iterable<EffectAny>, Discard extends boolean, Mode> = [T] extends [
+  Iterable<Effect.Variance<infer R, infer E, infer A>>
+]
+  ? Effect<
+      R,
+      Mode extends 'either' ? never : Mode extends 'validate' ? Array<Option.Option<E>> : E,
+      Discard extends true ? void : Mode extends 'either' ? Array<Either.Either<E, A>> : Array<A>
+    >
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnObject (type alias)
+
+**Signature**
+
+```ts
+export type ReturnObject<T, Discard extends boolean, Mode> = [T] extends [{ [K: string]: EffectAny }]
+  ? Effect<
+      keyof T extends never
+        ? never
+        : [T[keyof T]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }]
+        ? R
+        : never,
+      Mode extends 'either'
+        ? never
+        : keyof T extends never
+        ? never
+        : Mode extends 'validate'
+        ? {
+            -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>]
+              ? Option.Option<_E>
+              : never
+          }
+        : [T[keyof T]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+        ? E
+        : never,
+      Discard extends true
+        ? void
+        : Mode extends 'either'
+        ? {
+            -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>]
+              ? Either.Either<_E, _A>
+              : never
+          }
+        : { -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? _A : never }
+    >
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnTuple (type alias)
+
+**Signature**
+
+```ts
+export type ReturnTuple<T extends ReadonlyArray<unknown>, Discard extends boolean, Mode> = Effect<
+  T[number] extends never ? never : [T[number]] extends [{ [EffectTypeId]: { _R: (_: never) => infer R } }] ? R : never,
+  Mode extends 'either'
+    ? never
+    : T[number] extends never
+    ? never
+    : Mode extends 'validate'
+    ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>]
+          ? Option.Option<_E>
+          : never
+      }
+    : [T[number]] extends [{ [EffectTypeId]: { _E: (_: never) => infer E } }]
+    ? E
+    : never,
+  Discard extends true
+    ? void
+    : T[number] extends never
+    ? []
+    : Mode extends 'either'
+    ? {
+        -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>]
+          ? Either.Either<_E, _A>
+          : never
+      }
+    : { -readonly [K in keyof T]: [T[K]] extends [Effect.Variance<infer _R, infer _E, infer _A>] ? _A : never }
+> extends infer X
+  ? X
+  : never
+```
+
+Added in v1.0.0
+
+## Effect (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<R, E, A> {
+  readonly [EffectTypeId]: {
+    readonly _R: (_: never) => R
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### Context (type alias)
+
+**Signature**
+
+```ts
+export type Context<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _R : never
+```
+
+Added in v1.0.0
+
+### Error (type alias)
+
+**Signature**
+
+```ts
+export type Error<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _E : never
+```
+
+Added in v1.0.0
+
+### Success (type alias)
+
+**Signature**
+
+```ts
+export type Success<T extends Effect<any, any, any>> = [T] extends [Effect<infer _R, infer _E, infer _A>] ? _A : never
+```
+
+Added in v1.0.0
+
+### Unify (type alias)
+
+**Signature**
+
+```ts
+export type Unify<Ret extends Effect<any, any, any>> = Effect<Context<Ret>, Error<Ret>, Success<Ret>>
+```
+
+Added in v1.0.0
 
 ## MergeRecord (type alias)
 
