@@ -35,6 +35,11 @@ Added in v1.0.0
   - [FlatConfigProviderTypeId](#flatconfigprovidertypeid)
   - [FlatConfigProviderTypeId (type alias)](#flatconfigprovidertypeid-type-alias)
 - [utils](#utils)
+  - [ConfigProvider (namespace)](#configprovider-namespace)
+    - [Flat (interface)](#flat-interface)
+    - [FromEnvConfig (interface)](#fromenvconfig-interface)
+    - [FromMapConfig (interface)](#frommapconfig-interface)
+    - [Proto (interface)](#proto-interface)
   - [mapInputPath](#mapinputpath)
   - [nested](#nested)
   - [orElse](#orelse)
@@ -298,6 +303,71 @@ export type FlatConfigProviderTypeId = typeof FlatConfigProviderTypeId
 Added in v1.0.0
 
 # utils
+
+## ConfigProvider (namespace)
+
+Added in v1.0.0
+
+### Flat (interface)
+
+A simplified config provider that knows only how to deal with flat
+(key/value) properties. Because these providers are common, there is
+special support for implementing them.
+
+**Signature**
+
+```ts
+export interface Flat {
+  readonly [FlatConfigProviderTypeId]: FlatConfigProviderTypeId
+  patch: PathPatch.PathPatch
+  load<A>(
+    path: ReadonlyArray<string>,
+    config: Config.Config.Primitive<A>,
+    split?: boolean
+  ): Effect.Effect<never, ConfigError.ConfigError, ReadonlyArray<A>>
+  enumerateChildren(path: ReadonlyArray<string>): Effect.Effect<never, ConfigError.ConfigError, HashSet.HashSet<string>>
+}
+```
+
+Added in v1.0.0
+
+### FromEnvConfig (interface)
+
+**Signature**
+
+```ts
+export interface FromEnvConfig {
+  readonly pathDelim: string
+  readonly seqDelim: string
+}
+```
+
+Added in v1.0.0
+
+### FromMapConfig (interface)
+
+**Signature**
+
+```ts
+export interface FromMapConfig {
+  readonly pathDelim: string
+  readonly seqDelim: string
+}
+```
+
+Added in v1.0.0
+
+### Proto (interface)
+
+**Signature**
+
+```ts
+export interface Proto {
+  readonly [ConfigProviderTypeId]: ConfigProviderTypeId
+}
+```
+
+Added in v1.0.0
 
 ## mapInputPath
 

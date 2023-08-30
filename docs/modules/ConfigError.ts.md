@@ -43,6 +43,9 @@ Added in v1.0.0
   - [ConfigErrorTypeId](#configerrortypeid)
   - [ConfigErrorTypeId (type alias)](#configerrortypeid-type-alias)
 - [utils](#utils)
+  - [ConfigError (namespace)](#configerror-namespace)
+    - [Proto (interface)](#proto-interface)
+    - [Reducer (type alias)](#reducer-type-alias)
   - [isMissingDataOnly](#ismissingdataonly)
   - [prefixed](#prefixed)
 
@@ -371,6 +374,32 @@ export type ConfigErrorTypeId = typeof ConfigErrorTypeId
 Added in v1.0.0
 
 # utils
+
+## ConfigError (namespace)
+
+Added in v1.0.0
+
+### Proto (interface)
+
+**Signature**
+
+```ts
+export interface Proto {
+  readonly [ConfigErrorTypeId]: ConfigErrorTypeId
+}
+```
+
+Added in v1.0.0
+
+### Reducer (type alias)
+
+**Signature**
+
+```ts
+export type Reducer<C, Z> = ConfigErrorReducer<C, Z>
+```
+
+Added in v1.0.0
 
 ## isMissingDataOnly
 

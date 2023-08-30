@@ -26,6 +26,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [CacheTypeId](#cachetypeid)
   - [CacheTypeId (type alias)](#cachetypeid-type-alias)
+- [utils](#utils)
+  - [Cache (namespace)](#cache-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -293,6 +296,28 @@ Added in v1.0.0
 
 ```ts
 export type CacheTypeId = typeof CacheTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Cache (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Key, Error, Value> {
+  readonly [CacheTypeId]: {
+    readonly _Key: (_: Key) => void
+    readonly _Error: (_: never) => Error
+    readonly _Value: (_: never) => Value
+  }
+}
 ```
 
 Added in v1.0.0

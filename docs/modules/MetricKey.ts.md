@@ -28,6 +28,15 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [MetricKeyTypeId](#metrickeytypeid)
   - [MetricKeyTypeId (type alias)](#metrickeytypeid-type-alias)
+- [utils](#utils)
+  - [MetricKey (namespace)](#metrickey-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [Counter (type alias)](#counter-type-alias)
+    - [Frequency (type alias)](#frequency-type-alias)
+    - [Gauge (type alias)](#gauge-type-alias)
+    - [Histogram (type alias)](#histogram-type-alias)
+    - [Summary (type alias)](#summary-type-alias)
+    - [Untyped (type alias)](#untyped-type-alias)
 
 ---
 
@@ -223,6 +232,86 @@ Added in v1.0.0
 
 ```ts
 export type MetricKeyTypeId = typeof MetricKeyTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## MetricKey (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Type> {
+  readonly [MetricKeyTypeId]: {
+    _Type: (_: never) => Type
+  }
+}
+```
+
+Added in v1.0.0
+
+### Counter (type alias)
+
+**Signature**
+
+```ts
+export type Counter = MetricKey<MetricKeyType.MetricKeyType.Counter>
+```
+
+Added in v1.0.0
+
+### Frequency (type alias)
+
+**Signature**
+
+```ts
+export type Frequency = MetricKey<MetricKeyType.MetricKeyType.Frequency>
+```
+
+Added in v1.0.0
+
+### Gauge (type alias)
+
+**Signature**
+
+```ts
+export type Gauge = MetricKey<MetricKeyType.MetricKeyType.Gauge>
+```
+
+Added in v1.0.0
+
+### Histogram (type alias)
+
+**Signature**
+
+```ts
+export type Histogram = MetricKey<MetricKeyType.MetricKeyType.Histogram>
+```
+
+Added in v1.0.0
+
+### Summary (type alias)
+
+**Signature**
+
+```ts
+export type Summary = MetricKey<MetricKeyType.MetricKeyType.Summary>
+```
+
+Added in v1.0.0
+
+### Untyped (type alias)
+
+**Signature**
+
+```ts
+export type Untyped = MetricKey<any>
 ```
 
 Added in v1.0.0

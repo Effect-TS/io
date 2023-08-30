@@ -28,6 +28,9 @@ Added in v1.0.0
   - [ScopeTypeId](#scopetypeid)
   - [ScopeTypeId (type alias)](#scopetypeid-type-alias)
 - [utils](#utils)
+  - [Scope (namespace)](#scope-namespace)
+    - [Closeable (type alias)](#closeable-type-alias)
+    - [Finalizer (type alias)](#finalizer-type-alias)
   - [addFinalizer](#addfinalizer)
   - [addFinalizerExit](#addfinalizerexit)
   - [extend](#extend)
@@ -184,6 +187,30 @@ export type ScopeTypeId = typeof ScopeTypeId
 Added in v1.0.0
 
 # utils
+
+## Scope (namespace)
+
+Added in v1.0.0
+
+### Closeable (type alias)
+
+**Signature**
+
+```ts
+export type Closeable = CloseableScope
+```
+
+Added in v1.0.0
+
+### Finalizer (type alias)
+
+**Signature**
+
+```ts
+export type Finalizer = (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<never, never, void>
+```
+
+Added in v1.0.0
 
 ## addFinalizer
 

@@ -40,6 +40,15 @@ Added in v1.0.0
   - [MetricStateTypeId (type alias)](#metricstatetypeid-type-alias)
   - [SummaryStateTypeId](#summarystatetypeid)
   - [SummaryStateTypeId (type alias)](#summarystatetypeid-type-alias)
+- [utils](#utils)
+  - [MetricState (namespace)](#metricstate-namespace)
+    - [Counter (interface)](#counter-interface)
+    - [Frequency (interface)](#frequency-interface)
+    - [Gauge (interface)](#gauge-interface)
+    - [Histogram (interface)](#histogram-interface)
+    - [Summary (interface)](#summary-interface)
+    - [Untyped (interface)](#untyped-interface)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -304,6 +313,110 @@ Added in v1.0.0
 
 ```ts
 export type SummaryStateTypeId = typeof SummaryStateTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## MetricState (namespace)
+
+Added in v1.0.0
+
+### Counter (interface)
+
+**Signature**
+
+```ts
+export interface Counter extends MetricState<MetricKeyType.MetricKeyType.Counter> {
+  readonly [CounterStateTypeId]: CounterStateTypeId
+  readonly count: number
+}
+```
+
+Added in v1.0.0
+
+### Frequency (interface)
+
+**Signature**
+
+```ts
+export interface Frequency extends MetricState<MetricKeyType.MetricKeyType.Frequency> {
+  readonly [FrequencyStateTypeId]: FrequencyStateTypeId
+  readonly occurrences: HashMap.HashMap<string, number>
+}
+```
+
+Added in v1.0.0
+
+### Gauge (interface)
+
+**Signature**
+
+```ts
+export interface Gauge extends MetricState<MetricKeyType.MetricKeyType.Gauge> {
+  readonly [GaugeStateTypeId]: GaugeStateTypeId
+  readonly value: number
+}
+```
+
+Added in v1.0.0
+
+### Histogram (interface)
+
+**Signature**
+
+```ts
+export interface Histogram extends MetricState<MetricKeyType.MetricKeyType.Histogram> {
+  readonly [HistogramStateTypeId]: HistogramStateTypeId
+  readonly buckets: Chunk.Chunk<readonly [number, number]>
+  readonly count: number
+  readonly min: number
+  readonly max: number
+  readonly sum: number
+}
+```
+
+Added in v1.0.0
+
+### Summary (interface)
+
+**Signature**
+
+```ts
+export interface Summary extends MetricState<MetricKeyType.MetricKeyType.Summary> {
+  readonly [SummaryStateTypeId]: SummaryStateTypeId
+  readonly error: number
+  readonly quantiles: Chunk.Chunk<readonly [number, Option.Option<number>]>
+  readonly count: number
+  readonly min: number
+  readonly max: number
+  readonly sum: number
+}
+```
+
+Added in v1.0.0
+
+### Untyped (interface)
+
+**Signature**
+
+```ts
+export interface Untyped extends MetricState<any> {}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [MetricStateTypeId]: {
+    readonly _A: (_: A) => void
+  }
+}
 ```
 
 Added in v1.0.0

@@ -98,6 +98,9 @@ export declare namespace Schedule {
     }
   }
 
+  /**
+   * @since 1.0.0
+   */
   export interface DriverVariance<Env, In, Out> {
     readonly [ScheduleDriverTypeId]: {
       readonly _Env: (_: never) => Env

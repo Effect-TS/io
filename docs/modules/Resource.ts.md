@@ -23,6 +23,8 @@ Added in v1.0.0
   - [ResourceTypeId](#resourcetypeid)
   - [ResourceTypeId (type alias)](#resourcetypeid-type-alias)
 - [utils](#utils)
+  - [Resource (namespace)](#resource-namespace)
+    - [Variance (interface)](#variance-interface)
   - [refresh](#refresh)
 
 ---
@@ -123,6 +125,25 @@ export type ResourceTypeId = typeof ResourceTypeId
 Added in v1.0.0
 
 # utils
+
+## Resource (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E, A> {
+  readonly [ResourceTypeId]: {
+    _E: (_: never) => E
+    _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
 
 ## refresh
 

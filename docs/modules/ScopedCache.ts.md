@@ -21,6 +21,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ScopedCacheTypeId](#scopedcachetypeid)
   - [ScopedCacheTypeId (type alias)](#scopedcachetypeid-type-alias)
+- [utils](#utils)
+  - [ScopedCache (namespace)](#scopedcache-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -166,6 +169,28 @@ Added in v1.0.0
 
 ```ts
 export type ScopedCacheTypeId = typeof ScopedCacheTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## ScopedCache (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Key, Error, Value> {
+  readonly [ScopedCacheTypeId]: {
+    _Key: (_: Key) => void
+    _Error: (_: never) => Error
+    _Value: (_: never) => Value
+  }
+}
 ```
 
 Added in v1.0.0

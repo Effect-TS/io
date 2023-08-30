@@ -24,6 +24,8 @@ Added in v1.0.0
 - [unsafe](#unsafe)
   - [unsafeMake](#unsafemake)
 - [utils](#utils)
+  - [SynchronizedRef (namespace)](#synchronizedref-namespace)
+    - [Variance (interface)](#variance-interface)
   - [getAndSet](#getandset)
   - [getAndUpdate](#getandupdate)
   - [getAndUpdateEffect](#getandupdateeffect)
@@ -119,6 +121,24 @@ export declare const unsafeMake: <A>(value: A) => SynchronizedRef<A>
 Added in v1.0.0
 
 # utils
+
+## SynchronizedRef (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [SynchronizedRefTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
 
 ## getAndSet
 

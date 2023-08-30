@@ -21,6 +21,10 @@ Added in v1.0.0
   - [MetricPairTypeId (type alias)](#metricpairtypeid-type-alias)
 - [unsafe](#unsafe)
   - [unsafeMake](#unsafemake)
+- [utils](#utils)
+  - [MetricPair (namespace)](#metricpair-namespace)
+    - [Untyped (interface)](#untyped-interface)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -89,6 +93,36 @@ export declare const unsafeMake: <Type extends MetricKeyType.MetricKeyType<any, 
   metricKey: MetricKey.MetricKey<Type>,
   metricState: MetricState.MetricState.Untyped
 ) => MetricPair.Untyped
+```
+
+Added in v1.0.0
+
+# utils
+
+## MetricPair (namespace)
+
+Added in v1.0.0
+
+### Untyped (interface)
+
+**Signature**
+
+```ts
+export interface Untyped extends MetricPair<MetricKeyType.MetricKeyType<any, any>> {}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Type extends MetricKeyType.MetricKeyType<any, any>> {
+  readonly [MetricPairTypeId]: {
+    readonly _Type: (_: never) => Type
+  }
+}
 ```
 
 Added in v1.0.0

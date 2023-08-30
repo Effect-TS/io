@@ -23,6 +23,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ScopedRefTypeId](#scopedreftypeid)
   - [ScopedRefTypeId (type alias)](#scopedreftypeid-type-alias)
+- [utils](#utils)
+  - [ScopedRef (namespace)](#scopedref-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -129,6 +132,26 @@ Added in v1.0.0
 
 ```ts
 export type ScopedRefTypeId = typeof ScopedRefTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## ScopedRef (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [ScopedRefTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

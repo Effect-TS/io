@@ -28,6 +28,8 @@ Added in v1.0.0
   - [unsafeDone](#unsafedone)
   - [unsafeMake](#unsafemake)
 - [utils](#utils)
+  - [Deferred (namespace)](#deferred-namespace)
+    - [Variance (interface)](#variance-interface)
   - [complete](#complete)
   - [completeWith](#completewith)
   - [die](#die)
@@ -188,6 +190,25 @@ export declare const unsafeMake: <E, A>(fiberId: FiberId.FiberId) => Deferred<E,
 Added in v1.0.0
 
 # utils
+
+## Deferred (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E, A> {
+  readonly [DeferredTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
 
 ## complete
 

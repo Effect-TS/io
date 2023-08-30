@@ -30,7 +30,10 @@ export interface Ref<A> extends Ref.Variance<A>, Pipeable {
  * @since 1.0.0
  * @category models
  */
-export namespace Ref {
+export declare namespace Ref {
+  /**
+   * @since 1.0.0
+   */
   export interface Variance<A> {
     readonly [RefTypeId]: {
       readonly _A: (_: never) => A

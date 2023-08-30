@@ -167,6 +167,9 @@ export declare namespace Fiber {
     }
   }
 
+  /**
+   * @since 1.0.0
+   */
   export interface RuntimeVariance<E, A> {
     readonly [RuntimeFiberTypeId]: {
       readonly _E: (_: never) => E

@@ -25,6 +25,9 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [KeyedPoolTypeId](#keyedpooltypeid)
   - [KeyedPoolTypeId (type alias)](#keyedpooltypeid-type-alias)
+- [utils](#utils)
+  - [KeyedPool (namespace)](#keyedpool-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -201,6 +204,28 @@ Added in v1.0.0
 
 ```ts
 export type KeyedPoolTypeId = typeof KeyedPoolTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## KeyedPool (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<K, E, A> {
+  readonly [KeyedPoolTypeId]: {
+    readonly _K: (_: K) => void
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

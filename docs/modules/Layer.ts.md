@@ -85,6 +85,11 @@ Added in v1.0.0
   - [LayerTypeId](#layertypeid)
   - [LayerTypeId (type alias)](#layertypeid-type-alias)
 - [utils](#utils)
+  - [Layer (namespace)](#layer-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [Context (type alias)](#context-type-alias)
+    - [Error (type alias)](#error-type-alias)
+    - [Success (type alias)](#success-type-alias)
   - [extendScope](#extendscope)
   - [fiberRefLocallyScopedWith](#fiberreflocallyscopedwith)
   - [fresh](#fresh)
@@ -829,6 +834,56 @@ export type LayerTypeId = typeof LayerTypeId
 Added in v1.0.0
 
 # utils
+
+## Layer (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<RIn, E, ROut> {
+  readonly [LayerTypeId]: {
+    readonly _RIn: (_: never) => RIn
+    readonly _E: (_: never) => E
+    readonly _ROut: (_: ROut) => void
+  }
+}
+```
+
+Added in v1.0.0
+
+### Context (type alias)
+
+**Signature**
+
+```ts
+export type Context<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _R : never
+```
+
+Added in v1.0.0
+
+### Error (type alias)
+
+**Signature**
+
+```ts
+export type Error<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _E : never
+```
+
+Added in v1.0.0
+
+### Success (type alias)
+
+**Signature**
+
+```ts
+export type Success<T extends Layer<any, any, never>> = [T] extends [Layer<infer _R, infer _E, infer _A>] ? _A : never
+```
+
+Added in v1.0.0
 
 ## extendScope
 

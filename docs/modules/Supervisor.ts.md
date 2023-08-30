@@ -40,6 +40,9 @@ Added in v1.0.0
   - [SupervisorTypeId (type alias)](#supervisortypeid-type-alias)
 - [unsafe](#unsafe)
   - [unsafeTrack](#unsafetrack)
+- [utils](#utils)
+  - [Supervisor (namespace)](#supervisor-namespace)
+    - [Variance (interface)](#variance-interface)
 
 ---
 
@@ -328,6 +331,26 @@ Unsafely creates a new supervisor that tracks children in a set.
 
 ```ts
 export declare const unsafeTrack: () => Supervisor<Array<Fiber.RuntimeFiber<any, any>>>
+```
+
+Added in v1.0.0
+
+# utils
+
+## Supervisor (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<T> {
+  readonly [SupervisorTypeId]: {
+    readonly _T: (_: never) => T
+  }
+}
 ```
 
 Added in v1.0.0

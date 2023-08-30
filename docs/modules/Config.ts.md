@@ -39,6 +39,10 @@ Added in v1.0.0
   - [ConfigTypeId](#configtypeid)
   - [ConfigTypeId (type alias)](#configtypeid-type-alias)
 - [utils](#utils)
+  - [Config (namespace)](#config-namespace)
+    - [Primitive (interface)](#primitive-interface)
+    - [Variance (interface)](#variance-interface)
+    - [Wrap (type alias)](#wrap-type-alias)
   - [map](#map)
   - [mapAttempt](#mapattempt)
   - [mapOrFail](#maporfail)
@@ -353,6 +357,59 @@ export type ConfigTypeId = typeof ConfigTypeId
 Added in v1.0.0
 
 # utils
+
+## Config (namespace)
+
+Added in v1.0.0
+
+### Primitive (interface)
+
+**Signature**
+
+```ts
+export interface Primitive<A> extends Config<A> {
+  readonly description: string
+  parse(text: string): Either.Either<ConfigError.ConfigError, A>
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [ConfigTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### Wrap (type alias)
+
+Wraps a nested structure, converting all primitives to a `Config`.
+
+`Config.Wrap<{ key: string }>` becomes `{ key: Config<string> }`
+
+To create the resulting config, use the `unwrap` constructor.
+
+**Signature**
+
+```ts
+export type Wrap<A> =
+  | (A extends Record<string, any>
+      ? {
+          [K in keyof A]: Wrap<A[K]>
+        }
+      : never)
+  | Config<A>
+```
+
+Added in v1.0.0
 
 ## map
 

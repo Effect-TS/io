@@ -71,6 +71,13 @@ Added in v1.0.0
   - [RuntimeFiberTypeId (type alias)](#runtimefibertypeid-type-alias)
 - [utilities](#utilities)
   - [getCurrentFiber](#getcurrentfiber)
+- [utils](#utils)
+  - [Fiber (namespace)](#fiber-namespace)
+    - [Descriptor (interface)](#descriptor-interface)
+    - [Dump (interface)](#dump-interface)
+    - [RuntimeVariance (interface)](#runtimevariance-interface)
+    - [Variance (interface)](#variance-interface)
+    - [Runtime (type alias)](#runtime-type-alias)
 - [zipping](#zipping)
   - [zip](#zip)
   - [zipLeft](#zipleft)
@@ -787,6 +794,96 @@ Gets the current fiber if one is running.
 
 ```ts
 export declare const getCurrentFiber: () => Option.Option<RuntimeFiber<any, any>>
+```
+
+Added in v1.0.0
+
+# utils
+
+## Fiber (namespace)
+
+Added in v1.0.0
+
+### Descriptor (interface)
+
+A record containing information about a `Fiber`.
+
+**Signature**
+
+```ts
+export interface Descriptor {
+  /**
+   * The fiber's unique identifier.
+   */
+  readonly id: FiberId.FiberId
+  /**
+   * The status of the fiber.
+   */
+  readonly status: FiberStatus.FiberStatus
+  /**
+   * The set of fibers attempting to interrupt the fiber or its ancestors.
+   */
+  readonly interruptors: HashSet.HashSet<FiberId.FiberId>
+}
+```
+
+Added in v1.0.0
+
+### Dump (interface)
+
+**Signature**
+
+```ts
+export interface Dump {
+  /**
+   * The fiber's unique identifier.
+   */
+  readonly id: FiberId.Runtime
+  /**
+   * The status of the fiber.
+   */
+  readonly status: FiberStatus.FiberStatus
+}
+```
+
+Added in v1.0.0
+
+### RuntimeVariance (interface)
+
+**Signature**
+
+```ts
+export interface RuntimeVariance<E, A> {
+  readonly [RuntimeFiberTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<E, A> {
+  readonly [FiberTypeId]: {
+    readonly _E: (_: never) => E
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### Runtime (type alias)
+
+**Signature**
+
+```ts
+export type Runtime<E, A> = RuntimeFiber<E, A>
 ```
 
 Added in v1.0.0
