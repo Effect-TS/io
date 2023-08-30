@@ -149,6 +149,21 @@ describe.concurrent("Effect", () => {
         expect(names[0]).toEqual(names[1])
       })
     ))
+  it.effect("withSpan doesn't break batching", () =>
+    provideEnv(
+      Effect.gen(function*($) {
+        yield* $(
+          Effect.zip(
+            getAllUserIds.pipe(Effect.withSpan("A")),
+            getAllUserIds.pipe(Effect.withSpan("B")),
+            { concurrent: true, batching: true }
+          ),
+          Effect.withRequestCaching(false)
+        )
+        const count = yield* $(Counter)
+        expect(count.count).toEqual(1)
+      })
+    ))
   it.effect("batching is independent from parallelism", () =>
     provideEnv(
       Effect.gen(function*($) {

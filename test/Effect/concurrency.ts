@@ -181,8 +181,8 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const latch = yield* $(Deferred.make<never, boolean>())
       const fiber = yield* $(
-        Deferred.succeed(latch, true),
-        Effect.race(Effect.sleep("45 seconds")),
+        Effect.unit,
+        Effect.race(Effect.zip(Deferred.succeed(latch, true), Effect.sleep("45 seconds"))),
         Effect.uninterruptible,
         Effect.fork
       )
