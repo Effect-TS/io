@@ -390,27 +390,40 @@ export const acquireUseRelease = dual<
     use: (a: A) => Effect.Effect<R2, E2, A2>,
     release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
   ) => Effect.Effect<R | R2 | R3, E | E2, A2>
->(3, (acquire, use, release) =>
+>(3, <R, E, A, R2, E2, A2, R3, X>(
+  acquire: Effect.Effect<R, E, A>,
+  use: (a: A) => Effect.Effect<R2, E2, A2>,
+  release: (a: A, exit: Exit.Exit<E2, A2>) => Effect.Effect<R3, never, X>
+): Effect.Effect<R | R2 | R3, E | E2, A2> =>
   uninterruptibleMask((restore) =>
     flatMap(
       acquire,
       (a) =>
-        flatMap(exit(suspend(() => restore(use(a)))), (exit) =>
-          suspend(() => release(a, exit)).pipe(
+        flatMap(exit(suspend(() => restore(step(use(a))))), (exit): Effect.Effect<R | R2 | R3, E | E2, A2> => {
+          if (exit._tag === "Success" && exit.value._tag === "Blocked") {
+            const value = exit.value
+            return blocked(
+              value.i0,
+              acquireUseRelease(succeed(a), () => value.i1, release)
+            )
+          }
+          const flat = exitFlatten(exit as Exit.Exit<E2, Exit.Exit<E2, A2>>)
+          return suspend(() => release(a, flat)).pipe(
             matchCauseEffect({
               onFailure: (cause) => {
-                switch (exit._tag) {
+                switch (flat._tag) {
                   case OpCodes.OP_FAILURE: {
-                    return failCause(internalCause.parallel(exit.i0, cause))
+                    return failCause(internalCause.parallel(flat.i0, cause))
                   }
                   case OpCodes.OP_SUCCESS: {
                     return failCause(cause)
                   }
                 }
               },
-              onSuccess: () => exit
+              onSuccess: () => flat
             })
-          ))
+          )
+        })
     )
   ))
 
