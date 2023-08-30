@@ -797,7 +797,7 @@ export const InterruptedException: (message?: string | undefined) => Interrupted
 /**
  * Returns `true` if the specified value is an `InterruptedException`, `false`
  * otherwise.
-
+ *
  * @since 1.0.0
  * @category refinements
  */
@@ -816,7 +816,7 @@ export const IllegalArgumentException: (message?: string | undefined) => Illegal
 /**
  * Returns `true` if the specified value is an `IllegalArgumentException`, `false`
  * otherwise.
-
+ *
  * @since 1.0.0
  * @category refinements
  */
@@ -834,12 +834,12 @@ export const NoSuchElementException: (message?: string | undefined) => NoSuchEle
   internal.NoSuchElementException
 
 /**
-  * Returns `true` if the specified value is an `IllegalArgumentException`, `false`
-  * otherwise.
-
-  * @since 1.0.0
-  * @category refinements
-  */
+ * Returns `true` if the specified value is an `NoSuchElementException`, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
 export const isNoSuchElementException: (u: unknown) => u is NoSuchElementException = internal.isNoSuchElementException
 
 /**
@@ -851,12 +851,12 @@ export const isNoSuchElementException: (u: unknown) => u is NoSuchElementExcepti
 export const RuntimeException: (message?: string | undefined) => RuntimeException = internal.RuntimeException
 
 /**
-  * Returns `true` if the specified value is an `RuntimeException`, `false`
-  * otherwise.
-
-  * @since 1.0.0
-  * @category refinements
-  */
+ * Returns `true` if the specified value is an `RuntimeException`, `false`
+ * otherwise.
+ *
+ * @since 1.0.0
+ * @category refinements
+ */
 export const isRuntimeException: (u: unknown) => u is RuntimeException = internal.isRuntimeException
 
 /**

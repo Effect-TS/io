@@ -1078,7 +1078,7 @@ Added in v1.0.0
 
 ## isNoSuchElementException
 
-Returns `true` if the specified value is an `IllegalArgumentException`, `false`
+Returns `true` if the specified value is an `NoSuchElementException`, `false`
 otherwise.
 
 **Signature**
