@@ -1,5 +1,53 @@
 # @effect/io
 
+## 0.39.0
+
+### Minor Changes
+
+- [#617](https://github.com/Effect-TS/io/pull/617) [`32a665a`](https://github.com/Effect-TS/io/commit/32a665a96750ca5c655c9e37cbca79d1dd6191cd) Thanks [@tim-smart](https://github.com/tim-smart)! - rename Effect.getFiberRefs to Effect.fiberRefs
+
+- [#628](https://github.com/Effect-TS/io/pull/628) [`b79ebb0`](https://github.com/Effect-TS/io/commit/b79ebb066d5fc4a818c97040f7cf00ab5da1564f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Introduce contextualization in tracer, remove onRun from supervisor
+
+- [#632](https://github.com/Effect-TS/io/pull/632) [`32792e2`](https://github.com/Effect-TS/io/commit/32792e24db39f5acadd28ac01fbdcb926ce10a11) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Flatten Module Structure
+
+- [#631](https://github.com/Effect-TS/io/pull/631) [`5329ef0`](https://github.com/Effect-TS/io/commit/5329ef0ec25b0fc50942ed390702febe1ed5bacc) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Use Console for default Logger
+
+- [#600](https://github.com/Effect-TS/io/pull/600) [`5324126`](https://github.com/Effect-TS/io/commit/5324126ce56ed5cab28808748be4cc50c2672a2e) Thanks [@tim-smart](https://github.com/tim-smart)! - remove Effect.some/unsome
+
+- [#629](https://github.com/Effect-TS/io/pull/629) [`10a02ed`](https://github.com/Effect-TS/io/commit/10a02ede12392748469e1b5b7bb50a0290c979df) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Align API between runtime flags and fiber refs
+
+- [#617](https://github.com/Effect-TS/io/pull/617) [`32a665a`](https://github.com/Effect-TS/io/commit/32a665a96750ca5c655c9e37cbca79d1dd6191cd) Thanks [@tim-smart](https://github.com/tim-smart)! - remove LazyArg from Effect.fromNullable
+
+- [#641](https://github.com/Effect-TS/io/pull/641) [`66a3efe`](https://github.com/Effect-TS/io/commit/66a3efe11c8c83c61cb4ec08035f1d22e0f23fa4) Thanks [@tim-smart](https://github.com/tim-smart)! - update /data and dev deps
+
+### Patch Changes
+
+- [#630](https://github.com/Effect-TS/io/pull/630) [`29ce96d`](https://github.com/Effect-TS/io/commit/29ce96d4d5e9d2e9288e06776bd4e66d50fe8d94) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Allow returning errors in Effect.repeat/retryUntilWhileEffect
+
+- [#606](https://github.com/Effect-TS/io/pull/606) [`1c0e794`](https://github.com/Effect-TS/io/commit/1c0e794e780b725af5689229737debe5031e1f5e) Thanks [@tim-smart](https://github.com/tim-smart)! - remove withGroup/Time from Console interface
+
+- [#628](https://github.com/Effect-TS/io/pull/628) [`b79ebb0`](https://github.com/Effect-TS/io/commit/b79ebb066d5fc4a818c97040f7cf00ab5da1564f) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Selective annotation for cause tracing
+
+- [#613](https://github.com/Effect-TS/io/pull/613) [`f49a5c8`](https://github.com/Effect-TS/io/commit/f49a5c8348c6f40d7a080cdd53bb3613886aba42) Thanks [@gcanti](https://github.com/gcanti)! - update /data and use Predicate.isTagged when possible
+
+- [#614](https://github.com/Effect-TS/io/pull/614) [`52106fc`](https://github.com/Effect-TS/io/commit/52106fcba5813365256697e69f0edcad49402a91) Thanks [@tim-smart](https://github.com/tim-smart)! - improve readability of .all signatures
+
+- [#626](https://github.com/Effect-TS/io/pull/626) [`03d8e4e`](https://github.com/Effect-TS/io/commit/03d8e4e708954b820780b1c99d43dde659692234) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid losing annotations when catchTag / catchTags fail to recover
+
+- [#622](https://github.com/Effect-TS/io/pull/622) [`fb2cea8`](https://github.com/Effect-TS/io/commit/fb2cea8b96b25eaa948a0c593ef89a1c3e0302b9) Thanks [@tim-smart](https://github.com/tim-smart)! - expose value in Effect.filterOrDie fallback function
+
+- [#616](https://github.com/Effect-TS/io/pull/616) [`5fcdcd2`](https://github.com/Effect-TS/io/commit/5fcdcd21115fcfd60835e44bee29f6daceb40f32) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Allow custom backing for Queue
+
+- [#638](https://github.com/Effect-TS/io/pull/638) [`4abcc49`](https://github.com/Effect-TS/io/commit/4abcc497798b06f1babfaff3a2f63daf3f75528c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid breaking batching when acquireUseRelease is used
+
+- [#618](https://github.com/Effect-TS/io/pull/618) [`cf5286a`](https://github.com/Effect-TS/io/commit/cf5286a8cde3c715b13ae6c78cb347b285f37da8) Thanks [@tim-smart](https://github.com/tim-smart)! - use millis for fiber lifetimes metric & adjust histogram buckets
+
+- [#636](https://github.com/Effect-TS/io/pull/636) [`00f7c1c`](https://github.com/Effect-TS/io/commit/00f7c1c576d6797511f623488a9bdcaffa7207d2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid breaking batching when withSpan is used
+
+- [#633](https://github.com/Effect-TS/io/pull/633) [`6fed480`](https://github.com/Effect-TS/io/commit/6fed4803cd63950b916b03ae8370e22ed4f117cf) Thanks [@tim-smart](https://github.com/tim-smart)! - add Effect.catchIf api
+
+- [#623](https://github.com/Effect-TS/io/pull/623) [`061c23b`](https://github.com/Effect-TS/io/commit/061c23bf0b4497e0b102fe7ccd24f387c4eeded7) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Include runtime flags changes in memo
+
 ## 0.38.2
 
 ### Patch Changes
