@@ -149,7 +149,7 @@ export const fromMap = (
   map: Map<string, string>,
   config: Partial<ConfigProvider.ConfigProvider.FromMapConfig> = {}
 ): ConfigProvider.ConfigProvider => {
-  const { pathDelim, seqDelim } = Object.assign({}, { seqDelim: ",", pathDelim: "." }, config)
+  const { pathDelim, seqDelim } = Object.assign({ seqDelim: ",", pathDelim: "." }, config)
   const makePathString = (path: ReadonlyArray<string>): string => pipe(path, RA.join(pathDelim))
   const unmakePathString = (pathString: string): ReadonlyArray<string> => pathString.split(pathDelim)
   const mapWithIndexSplit = splitIndexInKeys(

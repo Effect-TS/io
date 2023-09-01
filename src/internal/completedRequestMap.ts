@@ -1,4 +1,4 @@
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import { fiberRefUnsafeMake } from "@effect/io/internal/core"
 import type * as Request from "@effect/io/Request"
 

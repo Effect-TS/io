@@ -1,6 +1,6 @@
 import { seconds } from "@effect/data/Duration"
 import { dual } from "@effect/data/Function"
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import type * as Cache from "@effect/io/Cache"
 import type { Deferred } from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"

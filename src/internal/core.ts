@@ -1,13 +1,11 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
 import * as Differ from "@effect/data/Differ"
-import * as ContextPatch from "@effect/data/Differ/ContextPatch"
-import * as HashSetPatch from "@effect/data/Differ/HashSetPatch"
 import * as Either from "@effect/data/Either"
 import * as Equal from "@effect/data/Equal"
 import type { LazyArg } from "@effect/data/Function"
 import { dual, identity, pipe } from "@effect/data/Function"
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
@@ -1734,20 +1732,24 @@ export const fiberRefUnsafeMake = <Value>(
 /** @internal */
 export const fiberRefUnsafeMakeHashSet = <A>(
   initial: HashSet.HashSet<A>
-): FiberRef.FiberRef<HashSet.HashSet<A>> =>
-  fiberRefUnsafeMakePatch(initial, {
-    differ: Differ.hashSet(),
-    fork: HashSetPatch.empty<A>()
+): FiberRef.FiberRef<HashSet.HashSet<A>> => {
+  const differ = Differ.hashSet<A>()
+  return fiberRefUnsafeMakePatch(initial, {
+    differ,
+    fork: differ.empty
   })
+}
 
 /** @internal */
 export const fiberRefUnsafeMakeContext = <A>(
   initial: Context.Context<A>
-): FiberRef.FiberRef<Context.Context<A>> =>
-  fiberRefUnsafeMakePatch(initial, {
-    differ: Differ.environment(),
-    fork: ContextPatch.empty<A, A>()
+): FiberRef.FiberRef<Context.Context<A>> => {
+  const differ = Differ.environment<A>()
+  return fiberRefUnsafeMakePatch(initial, {
+    differ,
+    fork: differ.empty
   })
+}
 
 /** @internal */
 export const fiberRefUnsafeMakePatch = <Value, Patch>(
@@ -1760,9 +1762,9 @@ export const fiberRefUnsafeMakePatch = <Value, Patch>(
 ): FiberRef.FiberRef<Value> => ({
   [FiberRefTypeId]: fiberRefVariance,
   initial,
-  diff: (oldValue, newValue) => pipe(options.differ, Differ.diff(oldValue, newValue)),
-  combine: (first, second) => pipe(options.differ, Differ.combine(first as Patch, second as Patch)),
-  patch: (patch) => (oldValue) => pipe(options.differ, Differ.patch(patch as Patch, oldValue)),
+  diff: (oldValue, newValue) => options.differ.diff(oldValue, newValue),
+  combine: (first, second) => options.differ.combine(first as Patch, second as Patch),
+  patch: (patch) => (oldValue) => options.differ.patch(patch as Patch, oldValue),
   fork: options.fork,
   join: options.join ?? ((_, n) => n),
   pipe() {
@@ -1776,7 +1778,7 @@ export const fiberRefUnsafeMakeRuntimeFlags = (
 ): FiberRef.FiberRef<RuntimeFlags.RuntimeFlags> =>
   fiberRefUnsafeMakePatch(initial, {
     differ: _runtimeFlags.differ,
-    fork: RuntimeFlagsPatch.empty
+    fork: _runtimeFlags.differ.empty
   })
 
 /** @internal */
