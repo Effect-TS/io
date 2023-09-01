@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.39.1
+
+### Patch Changes
+
+- [#642](https://github.com/Effect-TS/io/pull/642) [`f421420`](https://github.com/Effect-TS/io/commit/f42142096005685692bbf813ad657b71a8672901) Thanks [@sukovanej](https://github.com/sukovanej)! - Use RuntimeFiber interface instead of the implementation class in Tracer.
+
 ## 0.39.0
 
 ### Minor Changes
