@@ -175,7 +175,7 @@ export interface Tracer {
     links: ReadonlyArray<SpanLink>,
     startTime: bigint
   ) => Span
-  readonly context: <X>(f: () => X, fiber: FiberRuntime<any, any>) => X
+  readonly context: <X>(f: () => X, fiber: Fiber.RuntimeFiber<any, any>) => X
 }
 ```
 
