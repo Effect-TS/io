@@ -5,8 +5,8 @@ import type * as Context from "@effect/data/Context"
 import type * as Option from "@effect/data/Option"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
+import type * as Fiber from "@effect/io/Fiber"
 import * as defaultServices from "@effect/io/internal/defaultServices"
-import type { FiberRuntime } from "@effect/io/internal/fiberRuntime"
 import * as internal from "@effect/io/internal/tracer"
 
 /**
@@ -31,7 +31,7 @@ export interface Tracer {
     links: ReadonlyArray<SpanLink>,
     startTime: bigint
   ) => Span
-  readonly context: <X>(f: () => X, fiber: FiberRuntime<any, any>) => X
+  readonly context: <X>(f: () => X, fiber: Fiber.RuntimeFiber<any, any>) => X
 }
 
 /**
