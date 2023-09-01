@@ -1,6 +1,6 @@
 import * as Equal from "@effect/data/Equal"
 import { dual, pipe } from "@effect/data/Function"
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import * as MutableRef from "@effect/data/MutableRef"

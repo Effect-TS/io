@@ -1,6 +1,6 @@
 import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"

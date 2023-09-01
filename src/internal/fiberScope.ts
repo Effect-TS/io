@@ -1,4 +1,4 @@
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 import * as FiberId from "@effect/io/FiberId"
 import * as FiberMessage from "@effect/io/internal/fiberMessage"
 import type * as FiberRuntime from "@effect/io/internal/fiberRuntime"

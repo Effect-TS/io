@@ -1030,7 +1030,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["Left"](op: core.Primitive & { _tag: "Left" }) {
-    return core.exitFail((op as any).i0)
+    return core.exitFail(op.left)
   }
 
   ["None"](_: core.Primitive & { _tag: "None" }) {
@@ -1038,11 +1038,11 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   }
 
   ["Right"](op: core.Primitive & { _tag: "Right" }) {
-    return core.exitSucceed((op as any).i0)
+    return core.exitSucceed(op.right)
   }
 
   ["Some"](op: core.Primitive & { _tag: "Some" }) {
-    return core.exitSucceed((op as any).i0)
+    return core.exitSucceed(op.value)
   }
 
   [OpCodes.OP_SYNC](op: core.Primitive & { _tag: OpCodes.OP_SYNC }) {

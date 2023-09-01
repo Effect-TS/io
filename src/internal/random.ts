@@ -1,7 +1,7 @@
 import * as Chunk from "@effect/data/Chunk"
 import * as Context from "@effect/data/Context"
-import * as DeterministicRandom from "@effect/data/DeterministicRandom"
 import { pipe } from "@effect/data/Function"
+import * as PCGRandom from "@effect/data/PCGRandom"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
 import type * as Random from "@effect/io/Random"
@@ -20,10 +20,10 @@ export const randomTag: Context.Tag<Random.Random, Random.Random> = Context.Tag(
 class RandomImpl implements Random.Random {
   readonly [RandomTypeId]: Random.RandomTypeId = RandomTypeId
 
-  readonly PRNG: DeterministicRandom.PCGRandom
+  readonly PRNG: PCGRandom.PCGRandom
 
   constructor(readonly seed: number) {
-    this.PRNG = new DeterministicRandom.PCGRandom(seed)
+    this.PRNG = new PCGRandom.PCGRandom(seed)
   }
 
   next(): Effect.Effect<never, never, number> {

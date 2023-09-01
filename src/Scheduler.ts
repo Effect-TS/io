@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 
-import { globalValue } from "@effect/data/Global"
+import { globalValue } from "@effect/data/GlobalValue"
 
 /**
  * @since 1.0.0
