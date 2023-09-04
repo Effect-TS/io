@@ -211,7 +211,7 @@ Added in v1.0.0
 
 ```ts
 export declare const addScoped: <R, E, A>(
-  effect: Effect<Scope | R, E, Logger<unknown, A>>
+  effect: Effect<R, E, Logger<unknown, A>>
 ) => Layer.Layer<Exclude<R, Scope>, E, never>
 ```
 
@@ -269,10 +269,10 @@ Added in v1.0.0
 
 ```ts
 export declare const replaceScoped: {
-  <R, E, B>(that: Effect<Scope | R, E, Logger<unknown, B>>): <A>(
+  <R, E, B>(that: Effect<R, E, Logger<unknown, B>>): <A>(
     self: Logger<unknown, A>
   ) => Layer.Layer<Exclude<R, Scope>, E, never>
-  <A, R, E, B>(self: Logger<unknown, A>, that: Effect<Scope | R, E, Logger<unknown, B>>): Layer.Layer<
+  <A, R, E, B>(self: Logger<unknown, A>, that: Effect<R, E, Logger<unknown, B>>): Layer.Layer<
     Exclude<R, Scope>,
     E,
     never
