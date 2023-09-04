@@ -265,10 +265,10 @@ export class RuntimeImpl<R> implements Runtime.Runtime<R> {
 export const make = <R>(
   options: {
     readonly context: Context.Context<R>
-    readonly flags: RuntimeFlags.RuntimeFlags
+    readonly runtimeFlags: RuntimeFlags.RuntimeFlags
     readonly fiberRefs: FiberRefs.FiberRefs
   }
-): Runtime.Runtime<R> => new RuntimeImpl(options.context, options.flags, options.fiberRefs)
+): Runtime.Runtime<R> => new RuntimeImpl(options.context, options.runtimeFlags, options.fiberRefs)
 
 /** @internal */
 export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> =>
@@ -292,7 +292,7 @@ export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
 /** @internal */
 export const defaultRuntime = make({
   context: Context.empty(),
-  flags: defaultRuntimeFlags,
+  runtimeFlags: defaultRuntimeFlags,
   fiberRefs: FiberRefs.unsafeMake(new Map())
 })
 
