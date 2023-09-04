@@ -56,7 +56,7 @@ export const addLoggerEffect = <R, E, A>(
 
 /** @internal */
 export const addLoggerScoped = <R, E, A>(
-  effect: Effect.Effect<R | Scope, E, Logger.Logger<unknown, A>>
+  effect: Effect.Effect<R, E, Logger.Logger<unknown, A>>
 ): Layer.Layer<Exclude<R, Scope>, E, never> =>
   Layer.unwrapScoped(
     core.map(effect, addLogger)
@@ -91,11 +91,11 @@ export const replaceLoggerEffect = dual<
 /** @internal */
 export const replaceLoggerScoped = dual<
   <R, E, B>(
-    that: Effect.Effect<R | Scope, E, Logger.Logger<unknown, B>>
+    that: Effect.Effect<R, E, Logger.Logger<unknown, B>>
   ) => <A>(self: Logger.Logger<unknown, A>) => Layer.Layer<Exclude<R, Scope>, E, never>,
   <A, R, E, B>(
     self: Logger.Logger<unknown, A>,
-    that: Effect.Effect<R | Scope, E, Logger.Logger<unknown, B>>
+    that: Effect.Effect<R, E, Logger.Logger<unknown, B>>
   ) => Layer.Layer<Exclude<R, Scope>, E, never>
 >(2, (self, that) => layer.flatMap(removeLogger(self), () => addLoggerScoped(that)))
 

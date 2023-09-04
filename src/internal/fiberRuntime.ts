@@ -2480,11 +2480,11 @@ export const labelMetricsScopedSet = (
 export const using = dual<
   <A, R2, E2, A2>(
     use: (a: A) => Effect.Effect<R2, E2, A2>
-  ) => <R, E>(self: Effect.Effect<R | Scope.Scope, E, A>) => Effect.Effect<R | R2, E | E2, A2>,
+  ) => <R, E>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, Scope.Scope> | R2, E | E2, A2>,
   <R, E, A, R2, E2, A2>(
-    self: Effect.Effect<R | Scope.Scope, E, A>,
+    self: Effect.Effect<R, E, A>,
     use: (a: A) => Effect.Effect<R2, E2, A2>
-  ) => Effect.Effect<R | R2, E | E2, A2>
+  ) => Effect.Effect<Exclude<R, Scope.Scope> | R2, E | E2, A2>
 >(2, (self, use) =>
   core.acquireUseRelease(
     scopeMake(),
