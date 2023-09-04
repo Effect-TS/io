@@ -73,7 +73,7 @@ Added in v1.0.0
 ```ts
 export declare const make: <R>(options: {
   readonly context: Context.Context<R>
-  readonly flags: RuntimeFlags.RuntimeFlags
+  readonly runtimeFlags: RuntimeFlags.RuntimeFlags
   readonly fiberRefs: FiberRefs.FiberRefs
 }) => Runtime<R>
 ```
