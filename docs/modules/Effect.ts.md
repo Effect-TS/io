@@ -286,7 +286,6 @@ Added in v1.0.0
   - [withRuntimeFlagsPatchScoped](#withruntimeflagspatchscoped)
 - [scheduler](#scheduler)
   - [setScheduler](#setscheduler)
-  - [withMaxFiberOps](#withmaxfiberops)
   - [withScheduler](#withscheduler)
 - [scoping, resources & finalization](#scoping-resources--finalization)
   - [acquireRelease](#acquirerelease)
@@ -4774,21 +4773,6 @@ Added in v1.0.0
 
 ```ts
 export declare const setScheduler: (scheduler: Scheduler) => Layer.Layer<never, never, never>
-```
-
-Added in v1.0.0
-
-## withMaxFiberOps
-
-Sets the child effect's maximum number of ops before yield
-
-**Signature**
-
-```ts
-export declare const withMaxFiberOps: {
-  (ops: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(self: Effect<R, E, B>, ops: number): Effect<R, E, B>
-}
 ```
 
 Added in v1.0.0

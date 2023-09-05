@@ -3,6 +3,7 @@
  */
 
 import { globalValue } from "@effect/data/GlobalValue"
+import type { RuntimeFiber } from "@effect/io/Fiber"
 
 /**
  * @since 1.0.0
@@ -15,6 +16,7 @@ export type Task = () => void
  * @category models
  */
 export interface Scheduler {
+  shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false
   scheduleTask(task: Task, priority: number): void
 }
 
@@ -74,7 +76,11 @@ export class MixedScheduler implements Scheduler {
     /**
      * @since 1.0.0
      */
-    readonly maxNextTickBeforeTimer: number
+    readonly maxNextTickBeforeTimer: number,
+    /**
+     * @since 1.0.0
+     */
+    readonly maxNumberOfOpsBeforeYield: number
   ) {}
 
   /**
@@ -109,6 +115,13 @@ export class MixedScheduler implements Scheduler {
   /**
    * @since 1.0.0
    */
+  shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
+    return fiber.currentOpCount > this.maxNumberOfOpsBeforeYield ? 0 : false
+  }
+
+  /**
+   * @since 1.0.0
+   */
   scheduleTask(task: Task, priority: number) {
     this.tasks.scheduleTask(task, priority)
     if (!this.running) {
@@ -124,7 +137,7 @@ export class MixedScheduler implements Scheduler {
  */
 export const defaultScheduler: Scheduler = globalValue(
   Symbol.for("@effect/io/Scheduler/defaultScheduler"),
-  () => new MixedScheduler(2048)
+  () => new MixedScheduler(2048, 2048)
 )
 
 /**
@@ -151,6 +164,13 @@ export class SyncScheduler implements Scheduler {
     } else {
       this.tasks.scheduleTask(task, priority)
     }
+  }
+
+  /**
+   * @since 1.0.0
+   */
+  shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
+    return fiber.currentOpCount > 2048 ? 0 : false
   }
 
   /**
@@ -199,6 +219,13 @@ export class ControlledScheduler implements Scheduler {
   /**
    * @since 1.0.0
    */
+  shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
+    return fiber.currentOpCount > 2048 ? 0 : false
+  }
+
+  /**
+   * @since 1.0.0
+   */
   step() {
     const tasks = this.tasks.buckets
     this.tasks.buckets = []
@@ -217,6 +244,15 @@ export class ControlledScheduler implements Scheduler {
 export const makeMatrix = (...record: Array<[number, Scheduler]>): Scheduler => {
   const index = record.sort(([p0], [p1]) => p0 < p1 ? -1 : p0 > p1 ? 1 : 0)
   return {
+    shouldYield(fiber) {
+      for (const scheduler of record) {
+        const priority = scheduler[1].shouldYield(fiber)
+        if (priority !== false) {
+          return priority
+        }
+      }
+      return false
+    },
     scheduleTask(task, priority) {
       let scheduler: Scheduler | undefined = undefined
       for (const i of index) {
@@ -233,15 +269,32 @@ export const makeMatrix = (...record: Array<[number, Scheduler]>): Scheduler => 
 
 /**
  * @since 1.0.0
- * @category constructors
+ * @category utilities
  */
-export const make = (scheduleTask: Scheduler["scheduleTask"]): Scheduler => ({ scheduleTask })
+export const defaultShouldYield: Scheduler["shouldYield"] = (fiber) => {
+  return fiber.currentOpCount > 2048 ? 0 : false
+}
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeBatched = (callback: (runBatch: () => void) => void) => {
+export const make = (
+  scheduleTask: Scheduler["scheduleTask"],
+  shouldYield: Scheduler["shouldYield"] = defaultShouldYield
+): Scheduler => ({
+  scheduleTask,
+  shouldYield
+})
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeBatched = (
+  callback: (runBatch: () => void) => void,
+  shouldYield: Scheduler["shouldYield"] = defaultShouldYield
+) => {
   let running = false
   const tasks = new PriorityBuckets()
   const starveInternal = () => {
@@ -267,17 +320,19 @@ export const makeBatched = (callback: (runBatch: () => void) => void) => {
       running = true
       starve()
     }
-  })
+  }, shouldYield)
 }
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const timer = (ms: number) => make((task) => setTimeout(task, ms))
+export const timer = (ms: number, shouldYield: Scheduler["shouldYield"] = defaultShouldYield) =>
+  make((task) => setTimeout(task, ms), shouldYield)
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const timerBatched = (ms: number) => makeBatched((task) => setTimeout(task, ms))
+export const timerBatched = (ms: number, shouldYield: Scheduler["shouldYield"] = defaultShouldYield) =>
+  makeBatched((task) => setTimeout(task, ms), shouldYield)

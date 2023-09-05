@@ -2696,17 +2696,6 @@ export const setScheduler = (scheduler: Scheduler): Layer.Layer<never, never, ne
   )
 
 /**
- * Sets the child effect's maximum number of ops before yield
- *
- * @since 1.0.0
- * @category scheduler
- */
-export const withMaxFiberOps: {
-  (ops: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(self: Effect<R, E, B>, ops: number): Effect<R, E, B>
-} = core.withMaxFiberOps
-
-/**
  * Sets the provided scheduler for usage in the wrapped effect
  *
  * @since 1.0.0

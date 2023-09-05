@@ -15,17 +15,20 @@ Added in v1.0.0
 - [constructors](#constructors)
   - [ControlledScheduler (class)](#controlledscheduler-class)
     - [scheduleTask (method)](#scheduletask-method)
+    - [shouldYield (method)](#shouldyield-method)
     - [step (method)](#step-method)
     - [tasks (property)](#tasks-property)
     - [deferred (property)](#deferred-property)
   - [MixedScheduler (class)](#mixedscheduler-class)
     - [starveInternal (method)](#starveinternal-method)
     - [starve (method)](#starve-method)
+    - [shouldYield (method)](#shouldyield-method-1)
     - [scheduleTask (method)](#scheduletask-method-1)
     - [running (property)](#running-property)
     - [tasks (property)](#tasks-property-1)
   - [SyncScheduler (class)](#syncscheduler-class)
     - [scheduleTask (method)](#scheduletask-method-2)
+    - [shouldYield (method)](#shouldyield-method-2)
     - [flush (method)](#flush-method)
     - [tasks (property)](#tasks-property-2)
     - [deferred (property)](#deferred-property-1)
@@ -39,6 +42,8 @@ Added in v1.0.0
   - [Task (type alias)](#task-type-alias)
 - [schedulers](#schedulers)
   - [defaultScheduler](#defaultscheduler)
+- [utilities](#utilities)
+  - [defaultShouldYield](#defaultshouldyield)
 - [utils](#utils)
   - [PriorityBuckets (class)](#prioritybuckets-class)
     - [scheduleTask (method)](#scheduletask-method-3)
@@ -64,6 +69,16 @@ Added in v1.0.0
 
 ```ts
 scheduleTask(task: Task, priority: number)
+```
+
+Added in v1.0.0
+
+### shouldYield (method)
+
+**Signature**
+
+```ts
+shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false
 ```
 
 Added in v1.0.0
@@ -108,7 +123,11 @@ export declare class MixedScheduler {
     /**
      * @since 1.0.0
      */
-    readonly maxNextTickBeforeTimer: number
+    readonly maxNextTickBeforeTimer: number,
+    /**
+     * @since 1.0.0
+     */
+    readonly maxNumberOfOpsBeforeYield: number
   )
 }
 ```
@@ -131,6 +150,16 @@ Added in v1.0.0
 
 ```ts
 private starve(depth = 0)
+```
+
+Added in v1.0.0
+
+### shouldYield (method)
+
+**Signature**
+
+```ts
+shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false
 ```
 
 Added in v1.0.0
@@ -185,6 +214,16 @@ scheduleTask(task: Task, priority: number)
 
 Added in v1.0.0
 
+### shouldYield (method)
+
+**Signature**
+
+```ts
+shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false
+```
+
+Added in v1.0.0
+
 ### flush (method)
 
 **Signature**
@@ -220,7 +259,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: (scheduleTask: Scheduler['scheduleTask']) => Scheduler
+export declare const make: (
+  scheduleTask: Scheduler['scheduleTask'],
+  shouldYield?: Scheduler['shouldYield']
+) => Scheduler
 ```
 
 Added in v1.0.0
@@ -230,7 +272,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const makeBatched: (callback: (runBatch: () => void) => void) => Scheduler
+export declare const makeBatched: (
+  callback: (runBatch: () => void) => void,
+  shouldYield?: Scheduler['shouldYield']
+) => Scheduler
 ```
 
 Added in v1.0.0
@@ -250,7 +295,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const timer: (ms: number) => Scheduler
+export declare const timer: (ms: number, shouldYield?: Scheduler['shouldYield']) => Scheduler
 ```
 
 Added in v1.0.0
@@ -260,7 +305,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const timerBatched: (ms: number) => Scheduler
+export declare const timerBatched: (ms: number, shouldYield?: Scheduler['shouldYield']) => Scheduler
 ```
 
 Added in v1.0.0
@@ -273,6 +318,7 @@ Added in v1.0.0
 
 ```ts
 export interface Scheduler {
+  shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false
   scheduleTask(task: Task, priority: number): void
 }
 ```
@@ -297,6 +343,18 @@ Added in v1.0.0
 
 ```ts
 export declare const defaultScheduler: Scheduler
+```
+
+Added in v1.0.0
+
+# utilities
+
+## defaultShouldYield
+
+**Signature**
+
+```ts
+export declare const defaultShouldYield: (fiber: RuntimeFiber<unknown, unknown>) => number | false
 ```
 
 Added in v1.0.0

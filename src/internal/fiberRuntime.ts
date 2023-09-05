@@ -59,6 +59,7 @@ import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
 import * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
+import type { Scheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Tracer from "@effect/io/Tracer"
@@ -246,22 +247,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _fiberRefs: FiberRefs.FiberRefs
   private _fiberId: FiberId.Runtime
   public _runtimeFlags: RuntimeFlags.RuntimeFlags
-  constructor(
-    fiberId: FiberId.Runtime,
-    fiberRefs0: FiberRefs.FiberRefs,
-    runtimeFlags0: RuntimeFlags.RuntimeFlags
-  ) {
-    this._runtimeFlags = runtimeFlags0
-    this._fiberId = fiberId
-    this._fiberRefs = fiberRefs0
-    this._supervisor = this.getFiberRef(currentSupervisor)
-    if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
-      const tags = this.getFiberRef(core.currentMetricLabels)
-      fiberStarted.unsafeUpdate(1, tags)
-      fiberActive.unsafeUpdate(1, tags)
-    }
-    this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
-  }
+
   private _queue = new Array<FiberMessage.FiberMessage>()
   private _children: Set<FiberRuntime<any, any>> | null = null
   private _observers = new Array<(exit: Exit.Exit<E, A>) => void>()
@@ -272,7 +258,27 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   private _exitValue: Exit.Exit<E, A> | null = null
   private _steps: Array<boolean> = [false]
   public _supervisor: Supervisor.Supervisor<any>
+  public _scheduler: Scheduler
   private _tracer: Tracer.Tracer
+  public currentOpCount: number = 0
+
+  constructor(
+    fiberId: FiberId.Runtime,
+    fiberRefs0: FiberRefs.FiberRefs,
+    runtimeFlags0: RuntimeFlags.RuntimeFlags
+  ) {
+    this._runtimeFlags = runtimeFlags0
+    this._fiberId = fiberId
+    this._fiberRefs = fiberRefs0
+    this._supervisor = this.getFiberRef(currentSupervisor)
+    this._scheduler = this.getFiberRef(core.currentScheduler)
+    if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
+      const tags = this.getFiberRef(core.currentMetricLabels)
+      fiberStarted.unsafeUpdate(1, tags)
+      fiberActive.unsafeUpdate(1, tags)
+    }
+    this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
+  }
 
   /**
    * The identity of the fiber.
@@ -526,6 +532,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   refreshRefCache() {
     this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
     this._supervisor = this.getFiberRef(currentSupervisor)
+    this._scheduler = this.getFiberRef(core.currentScheduler)
   }
 
   /**
@@ -1262,7 +1269,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    */
   runLoop(effect0: Effect.Effect<any, any, any>): Exit.Exit<any, any> {
     let cur = effect0
-    let ops = 0
+    this.currentOpCount = 0
     // eslint-disable-next-line no-constant-condition
     while (true) {
       if ((this._runtimeFlags & OpSupervision) !== 0) {
@@ -1271,11 +1278,12 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       if (this._queue.length > 0) {
         cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
       }
-      ops += 1
-      if (ops >= this.getFiberRef(core.currentMaxFiberOps)) {
-        ops = 0
+      this.currentOpCount += 1
+      const shouldYield = this.getFiberRef(core.currentScheduler).shouldYield(this)
+      if (shouldYield !== false) {
+        this.currentOpCount = 0
         const oldCur = cur
-        cur = core.flatMap(core.yieldNow(), () => oldCur)
+        cur = core.flatMap(core.yieldNow({ priority: shouldYield }), () => oldCur)
       }
       try {
         if (!((cur as core.Primitive)._tag in this)) {
