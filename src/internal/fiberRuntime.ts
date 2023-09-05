@@ -1759,23 +1759,39 @@ export const replicate = dual<
 export const replicateEffect = dual<
   {
     (n: number, options?: {
+      readonly concurrency?: Concurrency
+      readonly batching?: boolean | "inherit"
       readonly discard?: false
     }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, Array<A>>
     (n: number, options: {
+      readonly concurrency?: Concurrency
+      readonly batching?: boolean | "inherit"
       readonly discard: true
     }): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R, E, void>
   },
   {
     <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options?: {
+      readonly concurrency?: Concurrency
+      readonly batching?: boolean | "inherit"
       readonly discard?: false
     }): Effect.Effect<R, E, Array<A>>
     <R, E, A>(self: Effect.Effect<R, E, A>, n: number, options: {
+      readonly concurrency?: Concurrency
+      readonly batching?: boolean | "inherit"
       readonly discard: true
     }): Effect.Effect<R, E, void>
   }
 >(
   (args) => core.isEffect(args[0]),
-  (self, n, options) => all(replicate(n)(self), options as { readonly discard: boolean })
+  (self, n, options) =>
+    all(
+      replicate(self, n),
+      options as {
+        readonly concurrency?: Concurrency
+        readonly batching?: boolean | "inherit"
+        readonly discard?: boolean
+      }
+    )
 )
 
 // @ts-expect-error
