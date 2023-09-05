@@ -1,5 +1,23 @@
 # @effect/io
 
+## 0.40.0
+
+### Minor Changes
+
+- [#648](https://github.com/Effect-TS/io/pull/648) [`01723b6`](https://github.com/Effect-TS/io/commit/01723b6b30b7fb8a1206449a2a5a007be4c4c43c) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Make Cooperative Yielding Scheduler-Aware
+
+- [#646](https://github.com/Effect-TS/io/pull/646) [`ec796c0`](https://github.com/Effect-TS/io/commit/ec796c0ffba76155093b303f16d6a92345dbaeb4) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix runtimeFlags naming
+
+- [#649](https://github.com/Effect-TS/io/pull/649) [`40dc950`](https://github.com/Effect-TS/io/commit/40dc950e396e04fc1bbd03d2e6607e77a13e5d47) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Reintroduce max number of ops via fiber ref
+
+- [#649](https://github.com/Effect-TS/io/pull/649) [`40dc950`](https://github.com/Effect-TS/io/commit/40dc950e396e04fc1bbd03d2e6607e77a13e5d47) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Improve fiber naming
+
+### Patch Changes
+
+- [#651](https://github.com/Effect-TS/io/pull/651) [`403bef3`](https://github.com/Effect-TS/io/commit/403bef3d726537451b551471032b222f0e13e071) Thanks [@tim-smart](https://github.com/tim-smart)! - add concurrency and batching to replicateEffect
+
+- [#644](https://github.com/Effect-TS/io/pull/644) [`d8d1e3f`](https://github.com/Effect-TS/io/commit/d8d1e3f73147d88b5a151005620b42746b8838d2) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Fix improper scope signatures
+
 ## 0.39.1
 
 ### Patch Changes
