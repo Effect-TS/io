@@ -669,6 +669,11 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
   /**
    * The identity of the fiber.
    */
+  get currentOpCount(): number
+
+  /**
+   * The identity of the fiber.
+   */
   id(): FiberId.Runtime
 
   /**

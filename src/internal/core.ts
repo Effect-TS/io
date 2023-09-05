@@ -1790,9 +1790,6 @@ export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRe
 export const currentSchedulingPriority: FiberRef.FiberRef<number> = fiberRefUnsafeMake(0)
 
 /** @internal */
-export const currentMaxFiberOps: FiberRef.FiberRef<number> = fiberRefUnsafeMake(2048)
-
-/** @internal */
 export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, Logger.AnnotationValue>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentLogAnnotation"),
   () => fiberRefUnsafeMake(HashMap.empty())
@@ -1825,12 +1822,6 @@ export const withSchedulingPriority = dual<
   (priority: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, priority: number) => Effect.Effect<R, E, B>
 >(2, (self, scheduler) => fiberRefLocally(self, currentSchedulingPriority, scheduler))
-
-/** @internal */
-export const withMaxFiberOps = dual<
-  (ops: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
-  <R, E, B>(self: Effect.Effect<R, E, B>, ops: number) => Effect.Effect<R, E, B>
->(2, (self, ops) => fiberRefLocally(self, currentMaxFiberOps, ops))
 
 /** @internal */
 export const currentConcurrency: FiberRef.FiberRef<"unbounded" | number> = globalValue(
