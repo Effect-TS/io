@@ -10,6 +10,7 @@ import type * as Cause from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type * as FiberId from "@effect/io/FiberId"
+import type { FiberRef } from "@effect/io/FiberRef"
 import type * as FiberRefs from "@effect/io/FiberRefs"
 import type * as FiberStatus from "@effect/io/FiberStatus"
 import * as core from "@effect/io/internal/core"
@@ -101,9 +102,14 @@ export interface Fiber<E, A> extends Fiber.Variance<E, A>, Pipeable {
  */
 export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E, A> {
   /**
-   * The identity of the fiber.
+   * Reads the current number of ops that have occurred since the last yield
    */
   get currentOpCount(): number
+
+  /**
+   * Reads the current value of a fiber ref
+   */
+  getFiberRef<X>(fiberRef: FiberRef<X>): X
 
   /**
    * The identity of the fiber.
@@ -122,27 +128,19 @@ export interface RuntimeFiber<E, A> extends Fiber<E, A>, Fiber.RuntimeVariance<E
 
   /**
    * Adds an observer to the list of observers.
-   *
-   * **NOTE**: This method must be invoked by the fiber itself.
    */
-  unsafeAddObserver(observer: (exit: Exit.Exit<E, A>) => void): void
+  addObserver(observer: (exit: Exit.Exit<E, A>) => void): void
 
   /**
    * Removes the specified observer from the list of observers that will be
    * notified when the fiber exits.
-   *
-   * **NOTE**: This method must be invoked by the fiber itself.
    */
-  unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void
+  removeObserver(observer: (exit: Exit.Exit<E, A>) => void): void
 
   /**
    * Retrieves all fiber refs of the fiber.
-   *
-   * **NOTE**: This method is safe to invoke on any fiber, but if not invoked
-   * on this fiber, then values derived from the fiber's state (including the
-   * log annotations and log level) may not be up-to-date.
    */
-  unsafeGetFiberRefs(): FiberRefs.FiberRefs
+  getFiberRefs(): FiberRefs.FiberRefs
 
   /**
    * Unsafely observes the fiber, but returns immediately if it is not

@@ -21,7 +21,7 @@ import type * as LogSpan from "@effect/io/LogSpan"
 import type * as MetricLabel from "@effect/io/MetricLabel"
 import type * as Request from "@effect/io/Request"
 import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
-import type * as Scheduler from "@effect/io/Scheduler"
+import * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Tracer from "@effect/io/Tracer"
@@ -304,6 +304,12 @@ export const currentSchedulingPriority: FiberRef<number> = core.currentSchedulin
  * @since 1.0.0
  * @category fiberRefs
  */
+export const currentMaxOpsBeforeYield: FiberRef<number> = core.currentMaxOpsBeforeYield
+
+/**
+ * @since 1.0.0
+ * @category fiberRefs
+ */
 export const unhandledErrorLogLevel: FiberRef<Option.Option<LogLevel.LogLevel>> = core.currentUnhandledErrorLogLevel
 
 /**
@@ -347,7 +353,7 @@ export const currentRuntimeFlags: FiberRef<RuntimeFlags.RuntimeFlags> = fiberRun
  * @since 1.0.0
  * @category fiberRefs
  */
-export const currentScheduler: FiberRef<Scheduler.Scheduler> = core.currentScheduler
+export const currentScheduler: FiberRef<Scheduler.Scheduler> = Scheduler.currentScheduler
 
 /**
  * @since 1.0.0

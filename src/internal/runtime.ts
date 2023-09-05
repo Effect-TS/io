@@ -40,7 +40,7 @@ export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
   if (options?.scheduler) {
     fiberRefs = FiberRefs.updatedAs(fiberRefs, {
       fiberId,
-      fiberRef: core.currentScheduler,
+      fiberRef: _scheduler.currentScheduler,
       value: options.scheduler
     })
   }
@@ -60,7 +60,7 @@ export const unsafeFork = <R>(runtime: Runtime.Runtime<R>) =>
   if (supervisor !== _supervisor.none) {
     supervisor.onStart(runtime.context, effect, Option.none(), fiberRuntime)
 
-    fiberRuntime.unsafeAddObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
+    fiberRuntime.addObserver((exit) => supervisor.onEnd(exit, fiberRuntime))
   }
 
   fiberScope.globalScope.add(runtime.runtimeFlags, fiberRuntime)
@@ -79,7 +79,7 @@ export const unsafeRunCallback = <R>(runtime: Runtime.Runtime<R>) =>
   const fiberRuntime = unsafeFork(runtime)(effect)
 
   if (onExit) {
-    fiberRuntime.unsafeAddObserver((exit) => {
+    fiberRuntime.addObserver((exit) => {
       onExit(exit)
     })
   }
@@ -243,7 +243,7 @@ export const unsafeRunPromiseExit =
       if (op) {
         resolve(op)
       }
-      unsafeFork(runtime)(effect).unsafeAddObserver((exit) => {
+      unsafeFork(runtime)(effect).addObserver((exit) => {
         resolve(exit)
       })
     })
@@ -277,7 +277,7 @@ export const runtime = <R>(): Effect.Effect<R, never, Runtime.Runtime<R>> =>
       new RuntimeImpl<R>(
         state.getFiberRef(core.currentContext as unknown as FiberRef.FiberRef<Context.Context<R>>),
         status.runtimeFlags,
-        state.unsafeGetFiberRefs()
+        state.getFiberRefs()
       )
     )
   )

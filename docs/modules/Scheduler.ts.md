@@ -123,11 +123,7 @@ export declare class MixedScheduler {
     /**
      * @since 1.0.0
      */
-    readonly maxNextTickBeforeTimer: number,
-    /**
-     * @since 1.0.0
-     */
-    readonly maxNumberOfOpsBeforeYield: number
+    readonly maxNextTickBeforeTimer: number
   )
 }
 ```

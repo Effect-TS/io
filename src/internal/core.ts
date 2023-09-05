@@ -41,8 +41,6 @@ import type * as BlockedRequests from "@effect/io/RequestBlock"
 import type * as RequestResolver from "@effect/io/RequestResolver"
 import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
 import * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
-import type * as Scheduler from "@effect/io/Scheduler"
-import * as scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Tracer from "@effect/io/Tracer"
 
@@ -1790,6 +1788,9 @@ export const currentContext: FiberRef.FiberRef<Context.Context<never>> = fiberRe
 export const currentSchedulingPriority: FiberRef.FiberRef<number> = fiberRefUnsafeMake(0)
 
 /** @internal */
+export const currentMaxOpsBeforeYield: FiberRef.FiberRef<number> = fiberRefUnsafeMake(2048)
+
+/** @internal */
 export const currentLogAnnotations: FiberRef.FiberRef<HashMap.HashMap<string, Logger.AnnotationValue>> = globalValue(
   Symbol.for("@effect/io/FiberRef/currentLogAnnotation"),
   () => fiberRefUnsafeMake(HashMap.empty())
@@ -1807,21 +1808,16 @@ export const currentLogSpan: FiberRef.FiberRef<List.List<LogSpan.LogSpan>> = glo
 )
 
 /** @internal */
-export const currentScheduler: FiberRef.FiberRef<Scheduler.Scheduler> = globalValue(
-  Symbol.for("@effect/io/FiberRef/currentScheduler"),
-  () => fiberRefUnsafeMake(scheduler.defaultScheduler)
-)
-/** @internal */
-export const withScheduler = dual<
-  (scheduler: Scheduler.Scheduler) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
-  <R, E, B>(self: Effect.Effect<R, E, B>, scheduler: Scheduler.Scheduler) => Effect.Effect<R, E, B>
->(2, (self, scheduler) => fiberRefLocally(self, currentScheduler, scheduler))
-
-/** @internal */
 export const withSchedulingPriority = dual<
   (priority: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
   <R, E, B>(self: Effect.Effect<R, E, B>, priority: number) => Effect.Effect<R, E, B>
 >(2, (self, scheduler) => fiberRefLocally(self, currentSchedulingPriority, scheduler))
+
+/** @internal */
+export const withMaxOpsBeforeYield = dual<
+  (priority: number) => <R, E, B>(self: Effect.Effect<R, E, B>) => Effect.Effect<R, E, B>,
+  <R, E, B>(self: Effect.Effect<R, E, B>, priority: number) => Effect.Effect<R, E, B>
+>(2, (self, scheduler) => fiberRefLocally(self, currentMaxOpsBeforeYield, scheduler))
 
 /** @internal */
 export const currentConcurrency: FiberRef.FiberRef<"unbounded" | number> = globalValue(

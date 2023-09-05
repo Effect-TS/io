@@ -28,6 +28,7 @@ Added in v1.0.0
   - [currentLogLevel](#currentloglevel)
   - [currentLogSpan](#currentlogspan)
   - [currentLoggers](#currentloggers)
+  - [currentMaxOpsBeforeYield](#currentmaxopsbeforeyield)
   - [currentMetricLabels](#currentmetriclabels)
   - [currentMinimumLogLevel](#currentminimumloglevel)
   - [currentRequestBatchingEnabled](#currentrequestbatchingenabled)
@@ -235,6 +236,16 @@ Added in v1.0.0
 
 ```ts
 export declare const currentLoggers: FiberRef<HashSet.HashSet<Logger.Logger<unknown, any>>>
+```
+
+Added in v1.0.0
+
+## currentMaxOpsBeforeYield
+
+**Signature**
+
+```ts
+export declare const currentMaxOpsBeforeYield: FiberRef<number>
 ```
 
 Added in v1.0.0

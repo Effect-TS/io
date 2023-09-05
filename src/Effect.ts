@@ -54,7 +54,7 @@ import type * as Runtime from "@effect/io/Runtime"
 import * as RuntimeFlags from "@effect/io/RuntimeFlags"
 import type * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
 import type * as Schedule from "@effect/io/Schedule"
-import type { Scheduler } from "@effect/io/Scheduler"
+import * as Scheduler from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Tracer from "@effect/io/Tracer"
@@ -2690,9 +2690,9 @@ export const withConcurrency: {
  * @since 1.0.0
  * @category scheduler
  */
-export const setScheduler = (scheduler: Scheduler): Layer.Layer<never, never, never> =>
+export const setScheduler = (scheduler: Scheduler.Scheduler): Layer.Layer<never, never, never> =>
   layer.scopedDiscard(
-    fiberRuntime.fiberRefLocallyScoped(core.currentScheduler, scheduler)
+    fiberRuntime.fiberRefLocallyScoped(Scheduler.currentScheduler, scheduler)
   )
 
 /**
@@ -2702,9 +2702,9 @@ export const setScheduler = (scheduler: Scheduler): Layer.Layer<never, never, ne
  * @category scheduler
  */
 export const withScheduler: {
-  (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
-} = core.withScheduler
+  (scheduler: Scheduler.Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler.Scheduler): Effect<R, E, B>
+} = Scheduler.withScheduler
 
 /**
  * Sets the scheduling priority used when yielding
@@ -2716,6 +2716,17 @@ export const withSchedulingPriority: {
   (priority: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
   <R, E, B>(self: Effect<R, E, B>, priority: number): Effect<R, E, B>
 } = core.withSchedulingPriority
+
+/**
+ * Sets the maximum number of operations before yield by the default schedulers
+ *
+ * @since 1.0.0
+ * @category utils
+ */
+export const withMaxOpsBeforeYield: {
+  (priority: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, priority: number): Effect<R, E, B>
+} = core.withMaxOpsBeforeYield
 
 // ---------------------------------------------------------------------------------------
 // clock

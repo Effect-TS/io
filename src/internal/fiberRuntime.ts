@@ -59,7 +59,7 @@ import type { Entry, Request } from "@effect/io/Request"
 import type * as RequestBlock from "@effect/io/RequestBlock"
 import type * as RuntimeFlags from "@effect/io/RuntimeFlags"
 import * as RuntimeFlagsPatch from "@effect/io/RuntimeFlagsPatch"
-import type { Scheduler } from "@effect/io/Scheduler"
+import { currentScheduler, type Scheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Tracer from "@effect/io/Tracer"
@@ -271,7 +271,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     this._fiberId = fiberId
     this._fiberRefs = fiberRefs0
     this._supervisor = this.getFiberRef(currentSupervisor)
-    this._scheduler = this.getFiberRef(core.currentScheduler)
+    this._scheduler = this.getFiberRef(currentScheduler)
     if (_runtimeFlags.runtimeMetrics(runtimeFlags0)) {
       const tags = this.getFiberRef(core.currentMetricLabels)
       fiberStarted.unsafeUpdate(1, tags)
@@ -355,7 +355,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * Retrieves the whole set of fiber refs.
    */
   fiberRefs(): Effect.Effect<never, never, FiberRefs.FiberRefs> {
-    return this.ask((fiber) => fiber.unsafeGetFiberRefs())
+    return this.ask((fiber) => fiber.getFiberRefs())
   }
 
   /**
@@ -398,14 +398,14 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
           if (fiber._exitValue !== null) {
             cb(this._exitValue!)
           } else {
-            fiber.unsafeAddObserver(cb)
+            fiber.addObserver(cb)
           }
         })
       )
       return core.sync(() =>
         this.tell(
           FiberMessage.stateful((fiber, _) => {
-            fiber.unsafeRemoveObserver(cb)
+            fiber.removeObserver(cb)
           })
         )
       )
@@ -415,9 +415,9 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   inheritAll(): Effect.Effect<never, never, void> {
     return core.withFiberRuntime<never, never, void>((parentFiber, parentStatus) => {
       const parentFiberId = parentFiber.id()
-      const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
+      const parentFiberRefs = parentFiber.getFiberRefs()
       const parentRuntimeFlags = parentStatus.runtimeFlags
-      const childFiberRefs = this.unsafeGetFiberRefs()
+      const childFiberRefs = this.getFiberRefs()
       const updatedFiberRefs = fiberRefs.joinAs(parentFiberRefs, parentFiberId, childFiberRefs)
 
       parentFiber.setFiberRefs(updatedFiberRefs)
@@ -463,7 +463,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    *
    * **NOTE**: This method must be invoked by the fiber itself.
    */
-  unsafeAddObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
+  addObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
     if (this._exitValue !== null) {
       observer(this._exitValue!)
     } else {
@@ -477,7 +477,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    *
    * **NOTE**: This method must be invoked by the fiber itself.
    */
-  unsafeRemoveObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
+  removeObserver(observer: (exit: Exit.Exit<E, A>) => void): void {
     this._observers = this._observers.filter((o) => o !== observer)
   }
   /**
@@ -487,7 +487,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * on this fiber, then values derived from the fiber's state (including the
    * log annotations and log level) may not be up-to-date.
    */
-  unsafeGetFiberRefs(): FiberRefs.FiberRefs {
+  getFiberRefs(): FiberRefs.FiberRefs {
     this.setFiberRef(currentRuntimeFlags, this._runtimeFlags)
     return this._fiberRefs
   }
@@ -532,7 +532,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
   refreshRefCache() {
     this._tracer = Context.get(this.getFiberRef(defaultServices.currentServices), tracer.tracerTag)
     this._supervisor = this.getFiberRef(currentSupervisor)
-    this._scheduler = this.getFiberRef(core.currentScheduler)
+    this._scheduler = this.getFiberRef(currentScheduler)
   }
 
   /**
@@ -613,7 +613,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
    * **NOTE**: This method must be invoked by the fiber itself.
    */
   drainQueueLaterOnExecutor() {
-    this.getFiberRef(core.currentScheduler).scheduleTask(
+    this._scheduler.scheduleTask(
       this.run,
       this.getFiberRef(core.currentSchedulingPriority)
     )
@@ -782,7 +782,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     const spans = this.getFiberRef(core.currentLogSpan)
     const annotations = this.getFiberRef(core.currentLogAnnotations)
     const loggers = this.getLoggers()
-    const contextMap = this.unsafeGetFiberRefs()
+    const contextMap = this.getFiberRefs()
     if (HashSet.size(loggers) > 0) {
       const clockService = Context.get(this.getFiberRef(defaultServices.currentServices), clock.clockTag)
       const date = new Date(clockService.unsafeCurrentTimeMillis())
@@ -1279,7 +1279,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
         cur = this.drainQueueWhileRunning(this._runtimeFlags, cur)
       }
       this.currentOpCount += 1
-      const shouldYield = this.getFiberRef(core.currentScheduler).shouldYield(this)
+      const shouldYield = this._scheduler.shouldYield(this)
       if (shouldYield !== false) {
         this.currentOpCount = 0
         const oldCur = cur
@@ -1466,11 +1466,11 @@ export const addFinalizer = <R, X>(
 ): Effect.Effect<R | Scope.Scope, never, void> =>
   core.withFiberRuntime(
     (runtime) => {
-      const acquireRefs = runtime.unsafeGetFiberRefs()
+      const acquireRefs = runtime.getFiberRefs()
       return core.flatMap(scope, (scope) =>
         core.scopeAddFinalizerExit(scope, (exit) =>
           core.withFiberRuntime((runtimeFinalizer) => {
-            const pre = runtimeFinalizer.unsafeGetFiberRefs()
+            const pre = runtimeFinalizer.getFiberRefs()
             const patch = FiberRefsPatch.diff(pre, acquireRefs)
             const inverse = FiberRefsPatch.diff(acquireRefs, pre)
             runtimeFinalizer.setFiberRefs(FiberRefsPatch.patch(patch, runtimeFinalizer.id(), acquireRefs))
@@ -1478,7 +1478,7 @@ export const addFinalizer = <R, X>(
               finalizer(exit) as Effect.Effect<never, never, X>,
               core.sync(() => {
                 runtimeFinalizer.setFiberRefs(
-                  FiberRefsPatch.patch(inverse, runtimeFinalizer.id(), runtimeFinalizer.unsafeGetFiberRefs())
+                  FiberRefsPatch.patch(inverse, runtimeFinalizer.id(), runtimeFinalizer.getFiberRefs())
                 )
               })
             )
@@ -1962,7 +1962,7 @@ export const forEachParUnboundedDiscard = <R, E, A, _>(
             )),
             forkDaemon,
             core.map((fiber) => {
-              fiber.unsafeAddObserver(() => {
+              fiber.addObserver(() => {
                 joinOrder.push(fiber)
               })
               return fiber
@@ -2113,7 +2113,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
   overrideScope: fiberScope.FiberScope | null = null
 ): FiberRuntime<E, A> => {
   const childId = FiberId.unsafeMake()
-  const parentFiberRefs = parentFiber.unsafeGetFiberRefs()
+  const parentFiberRefs = parentFiber.getFiberRefs()
   const childFiberRefs = fiberRefs.forkAs(parentFiberRefs, childId)
   const childFiber = new FiberRuntime<E, A>(childId, childFiberRefs, parentRuntimeFlags)
   const childContext = fiberRefs.getOrDefault(
@@ -2129,7 +2129,7 @@ export const unsafeMakeChildFiber = <R, E, A, E2, B>(
     childFiber
   )
 
-  childFiber.unsafeAddObserver((exit) => supervisor.onEnd(exit, childFiber))
+  childFiber.addObserver((exit) => supervisor.onEnd(exit, childFiber))
 
   const parentScope = overrideScope !== null ? overrideScope : pipe(
     parentFiber.getFiberRef(core.currentForkScopeOverride),
@@ -3203,8 +3203,8 @@ export const raceFibersWith = dual<
       options.otherScope
     )
     return core.async<R | R1 | R2 | R3, E2 | E3, A2 | A3>((cb) => {
-      leftFiber.unsafeAddObserver(() => completeRace(leftFiber, rightFiber, options.onSelfWin, raceIndicator, cb))
-      rightFiber.unsafeAddObserver(() => completeRace(rightFiber, leftFiber, options.onOtherWin, raceIndicator, cb))
+      leftFiber.addObserver(() => completeRace(leftFiber, rightFiber, options.onSelfWin, raceIndicator, cb))
+      rightFiber.addObserver(() => completeRace(rightFiber, leftFiber, options.onOtherWin, raceIndicator, cb))
       leftFiber.startFork(self)
       rightFiber.startFork(other)
     }, FiberId.combine(leftFiber.id(), rightFiber.id()))
@@ -3263,7 +3263,7 @@ export const invokeWithInterrupt: <R, E, A>(
                 cb(core.interruptFiber(processing))
               }
             }
-            processing.unsafeAddObserver((exit) => {
+            processing.addObserver((exit) => {
               cleanup.forEach((f) => f())
               cb(exit)
             })
