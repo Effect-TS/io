@@ -2,8 +2,12 @@
  * @since 1.0.0
  */
 
+import { dual } from "@effect/data/Function"
 import { globalValue } from "@effect/data/GlobalValue"
+import type { Effect } from "@effect/io/Effect"
 import type { RuntimeFiber } from "@effect/io/Fiber"
+import type { FiberRef } from "@effect/io/FiberRef"
+import * as core from "@effect/io/internal/core"
 
 /**
  * @since 1.0.0
@@ -76,11 +80,7 @@ export class MixedScheduler implements Scheduler {
     /**
      * @since 1.0.0
      */
-    readonly maxNextTickBeforeTimer: number,
-    /**
-     * @since 1.0.0
-     */
-    readonly maxNumberOfOpsBeforeYield: number
+    readonly maxNextTickBeforeTimer: number
   ) {}
 
   /**
@@ -116,7 +116,9 @@ export class MixedScheduler implements Scheduler {
    * @since 1.0.0
    */
   shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
-    return fiber.currentOpCount > this.maxNumberOfOpsBeforeYield ? 0 : false
+    return fiber.currentOpCount > fiber.getFiberRef(core.currentMaxOpsBeforeYield)
+      ? fiber.getFiberRef(core.currentSchedulingPriority)
+      : false
   }
 
   /**
@@ -137,7 +139,7 @@ export class MixedScheduler implements Scheduler {
  */
 export const defaultScheduler: Scheduler = globalValue(
   Symbol.for("@effect/io/Scheduler/defaultScheduler"),
-  () => new MixedScheduler(2048, 2048)
+  () => new MixedScheduler(2048)
 )
 
 /**
@@ -170,7 +172,9 @@ export class SyncScheduler implements Scheduler {
    * @since 1.0.0
    */
   shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
-    return fiber.currentOpCount > 2048 ? 0 : false
+    return fiber.currentOpCount > fiber.getFiberRef(core.currentMaxOpsBeforeYield)
+      ? fiber.getFiberRef(core.currentSchedulingPriority)
+      : false
   }
 
   /**
@@ -220,7 +224,9 @@ export class ControlledScheduler implements Scheduler {
    * @since 1.0.0
    */
   shouldYield(fiber: RuntimeFiber<unknown, unknown>): number | false {
-    return fiber.currentOpCount > 2048 ? 0 : false
+    return fiber.currentOpCount > fiber.getFiberRef(core.currentMaxOpsBeforeYield)
+      ? fiber.getFiberRef(core.currentSchedulingPriority)
+      : false
   }
 
   /**
@@ -272,7 +278,9 @@ export const makeMatrix = (...record: Array<[number, Scheduler]>): Scheduler => 
  * @category utilities
  */
 export const defaultShouldYield: Scheduler["shouldYield"] = (fiber) => {
-  return fiber.currentOpCount > 2048 ? 0 : false
+  return fiber.currentOpCount > fiber.getFiberRef(core.currentMaxOpsBeforeYield)
+    ? fiber.getFiberRef(core.currentSchedulingPriority)
+    : false
 }
 
 /**
@@ -336,3 +344,15 @@ export const timer = (ms: number, shouldYield: Scheduler["shouldYield"] = defaul
  */
 export const timerBatched = (ms: number, shouldYield: Scheduler["shouldYield"] = defaultShouldYield) =>
   makeBatched((task) => setTimeout(task, ms), shouldYield)
+
+/** @internal */
+export const currentScheduler: FiberRef<Scheduler> = globalValue(
+  Symbol.for("@effect/io/FiberRef/currentScheduler"),
+  () => core.fiberRefUnsafeMake(defaultScheduler)
+)
+
+/** @internal */
+export const withScheduler = dual<
+  (scheduler: Scheduler) => <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>,
+  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler) => Effect<R, E, B>
+>(2, (self, scheduler) => core.fiberRefLocally(self, currentScheduler, scheduler))

@@ -803,7 +803,7 @@ export const fiberRefs: Effect.Effect<never, never, FiberRefs.FiberRefs> = core.
   never,
   never,
   FiberRefs.FiberRefs
->((state) => core.succeed(state.unsafeGetFiberRefs()))
+>((state) => core.succeed(state.getFiberRefs()))
 
 /* @internal */
 export const head = <R, E, A>(
@@ -1721,7 +1721,7 @@ export const updateFiberRefs = (
   f: (fiberId: FiberId.Runtime, fiberRefs: FiberRefs.FiberRefs) => FiberRefs.FiberRefs
 ): Effect.Effect<never, never, void> =>
   core.withFiberRuntime<never, never, void>((state) => {
-    state.setFiberRefs(f(state.id(), state.unsafeGetFiberRefs()))
+    state.setFiberRefs(f(state.id(), state.getFiberRefs()))
     return core.unit
   })
 

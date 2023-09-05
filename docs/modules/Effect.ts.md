@@ -390,6 +390,7 @@ Added in v1.0.0
     - [Success (type alias)](#success-type-alias)
     - [Unify (type alias)](#unify-type-alias)
   - [MergeRecord (type alias)](#mergerecord-type-alias)
+  - [withMaxOpsBeforeYield](#withmaxopsbeforeyield)
   - [withSchedulingPriority](#withschedulingpriority)
 - [zipping](#zipping)
   - [validate](#validate)
@@ -4772,7 +4773,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const setScheduler: (scheduler: Scheduler) => Layer.Layer<never, never, never>
+export declare const setScheduler: (scheduler: Scheduler.Scheduler) => Layer.Layer<never, never, never>
 ```
 
 Added in v1.0.0
@@ -4785,8 +4786,8 @@ Sets the provided scheduler for usage in the wrapped effect
 
 ```ts
 export declare const withScheduler: {
-  (scheduler: Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
-  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler): Effect<R, E, B>
+  (scheduler: Scheduler.Scheduler): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, scheduler: Scheduler.Scheduler): Effect<R, E, B>
 }
 ```
 
@@ -6369,6 +6370,21 @@ export type MergeRecord<K, H> = {
 } extends infer X
   ? X
   : never
+```
+
+Added in v1.0.0
+
+## withMaxOpsBeforeYield
+
+Sets the maximum number of operations before yield by the default schedulers
+
+**Signature**
+
+```ts
+export declare const withMaxOpsBeforeYield: {
+  (priority: number): <R, E, B>(self: Effect<R, E, B>) => Effect<R, E, B>
+  <R, E, B>(self: Effect<R, E, B>, priority: number): Effect<R, E, B>
+}
 ```
 
 Added in v1.0.0

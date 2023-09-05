@@ -28,6 +28,7 @@ import * as _schedule from "@effect/io/internal/schedule"
 import * as supervisor from "@effect/io/internal/supervisor"
 import type * as Ref from "@effect/io/Ref"
 import type * as Schedule from "@effect/io/Schedule"
+import { currentScheduler } from "@effect/io/Scheduler"
 import type * as Scope from "@effect/io/Scope"
 import type * as Supervisor from "@effect/io/Supervisor"
 import type * as Synchronized from "@effect/io/SynchronizedRef"
@@ -71,7 +72,7 @@ class Semaphore {
   readonly release = (n: number): Effect.Effect<never, never, void> =>
     core.withFiberRuntime<never, never, void>((fiber) => {
       this.taken -= n
-      fiber.getFiberRef(core.currentScheduler).scheduleTask(() => {
+      fiber.getFiberRef(currentScheduler).scheduleTask(() => {
         this.waiters.forEach((wake) => wake())
       }, fiber.getFiberRef(core.currentSchedulingPriority))
       return core.unit

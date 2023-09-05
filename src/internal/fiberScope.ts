@@ -34,7 +34,7 @@ class Global implements FiberScope {
   readonly roots = new Set<FiberRuntime.FiberRuntime<any, any>>()
   add(_runtimeFlags: RuntimeFlags.RuntimeFlags, child: FiberRuntime.FiberRuntime<any, any>): void {
     this.roots.add(child)
-    child.unsafeAddObserver(() => {
+    child.addObserver(() => {
       this.roots.delete(child)
     })
   }
@@ -52,7 +52,7 @@ class Local implements FiberScope {
     this.parent.tell(
       FiberMessage.stateful((parentFiber) => {
         parentFiber.addChild(child)
-        child.unsafeAddObserver(() => {
+        child.addObserver(() => {
           parentFiber.removeChild(child)
         })
       })
