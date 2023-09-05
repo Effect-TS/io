@@ -1158,19 +1158,21 @@ export const parallelErrors = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Ef
 export const patchFiberRefs = (patch: FiberRefsPatch.FiberRefsPatch): Effect.Effect<never, never, void> =>
   updateFiberRefs((fiberId, fiberRefs) => pipe(patch, fiberRefsPatch.patch(fiberId, fiberRefs)))
 
+const promiseWith = <E, A>(
+  onThen: (a: A) => Effect.Effect<never, never, A>,
+  onCatch: (e: unknown) => Effect.Effect<never, E, never>
+) =>
+(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, E, A> =>
+  core.async<never, E, A>((resolve, signal) => {
+    evaluate.length >= 1
+      ? evaluate(signal)
+      : (evaluate as LazyArg<Promise<A>>)()
+        .then((a) => resolve(onThen(a)))
+        .catch((e) => resolve(onCatch(e)))
+  })
+
 /* @internal */
-export const promise = <A>(evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, never, A> =>
-  evaluate.length >= 1
-    ? core.async<never, never, A>((resolve, signal) => {
-      evaluate(signal)
-        .then((a) => resolve(core.exitSucceed(a)))
-        .catch((e) => resolve(core.exitDie(e)))
-    })
-    : core.async<never, never, A>((resolve) => {
-      ;(evaluate as LazyArg<Promise<A>>)()
-        .then((a) => resolve(core.exitSucceed(a)))
-        .catch((e) => resolve(core.exitDie(e)))
-    })
+export const promise = promiseWith(core.exitSucceed, core.exitDie)
 
 /* @internal */
 export const provideService = dual<
@@ -1591,50 +1593,11 @@ export const tryPromise: {
     readonly catch: (error: unknown) => E
   }
 ): Effect.Effect<never, E | unknown, A> => {
-  let evaluate: (signal?: AbortSignal) => Promise<A>
-  let catcher: ((error: unknown) => E) | undefined = undefined
-
-  if (typeof arg === "function") {
-    evaluate = arg as (signal?: AbortSignal) => Promise<A>
-  } else {
-    evaluate = arg.try as (signal?: AbortSignal) => Promise<A>
-    catcher = arg.catch
-  }
-
-  if (evaluate.length >= 1) {
-    return core.suspend(() => {
-      const controller = new AbortController()
-      return core.flatMap(try_(() => evaluate(controller.signal)), (promise) =>
-        core.async((resolve) => {
-          promise
-            .then((a) => resolve(core.exitSucceed(a)))
-            .catch((e) =>
-              resolve(core.exitFail(
-                catcher ? catcher(e) : e
-              ))
-            )
-          return core.sync(() => controller.abort())
-        }))
-    })
-  }
-
   return core.flatMap(
-    try_(
-      arg as {
-        readonly try: LazyArg<Promise<A>>
-        readonly catch: (error: unknown) => E
-      }
-    ),
-    (promise) =>
-      core.async<never, E, A>((resolve) => {
-        promise
-          .then((a) => resolve(core.exitSucceed(a)))
-          .catch((e) =>
-            resolve(core.exitFail(
-              catcher ? catcher(e) : e
-            ))
-          )
-      })
+    (typeof arg === "function")
+      ? try_((() => arg) as LazyArg<(signal?: AbortSignal) => Promise<A>>)
+      : try_({ try: (() => arg.try) as LazyArg<(signal?: AbortSignal) => Promise<A>>, catch: arg.catch }),
+    promiseWith(core.exitSucceed, (e) => core.exitFail("catch" in arg ? arg.catch(e) : e))
   )
 }
 
