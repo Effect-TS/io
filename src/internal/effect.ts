@@ -1163,13 +1163,17 @@ const promiseWith = <E, A>(
   onCatch: (e: unknown) => Effect.Effect<never, E, never>
 ) =>
 (evaluate: (signal: AbortSignal) => Promise<A>): Effect.Effect<never, E, A> =>
-  core.async<never, E, A>((resolve, signal) => {
-    evaluate.length >= 1
-      ? evaluate(signal)
-      : (evaluate as LazyArg<Promise<A>>)()
+  evaluate.length >= 1
+    ? core.async<never, E, A>((resolve, signal) => {
+      evaluate(signal)
         .then((a) => resolve(onThen(a)))
         .catch((e) => resolve(onCatch(e)))
-  })
+    })
+    : core.async<never, E, A>((resolve) => {
+      ;(evaluate as LazyArg<Promise<A>>)()
+        .then((a) => resolve(onThen(a)))
+        .catch((e) => resolve(onCatch(e)))
+    })
 
 /* @internal */
 export const promise = promiseWith(core.exitSucceed, core.exitDie)
