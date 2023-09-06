@@ -179,14 +179,13 @@ describe.concurrent("Effect", () => {
     }))
   it.effect("race in uninterruptible region", () =>
     Effect.gen(function*($) {
-      const latch = yield* $(Deferred.make<never, boolean>())
       const fiber = yield* $(
         Effect.unit,
-        Effect.race(Effect.zip(Deferred.succeed(latch, true), Effect.sleep("45 seconds"))),
+        Effect.race(Effect.sleep("45 seconds")),
         Effect.uninterruptible,
         Effect.fork
       )
-      yield* $(Deferred.await(latch))
+      yield* $(Effect.yieldNow())
       yield* $(adjust("30 seconds"))
       assert.isTrue(fiber.unsafePoll() === null)
       yield* $(adjust("60 seconds"))
