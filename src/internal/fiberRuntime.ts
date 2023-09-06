@@ -756,7 +756,7 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
       try {
         fiberLifetimes.unsafeUpdate(endTimeMillis - startTimeMillis, tags)
       } catch (e) {
-        console.log(e)
+        console.error("FAIL", e)
       }
     }
 
