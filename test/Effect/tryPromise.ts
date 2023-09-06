@@ -2,6 +2,19 @@ import * as Either from "@effect/data/Either"
 import * as Effect from "@effect/io/Effect"
 
 describe.concurrent("Effect", () => {
+  it("tryPromise - sync fail", async () => {
+    const effect = Effect.tryPromise({
+      try: (signal) => {
+        assert(signal instanceof AbortSignal)
+        throw "fail"
+        return Promise.resolve("hello")
+      },
+      catch: (e) => `caught: ${e}`
+    })
+    const either = await Effect.runPromise(Effect.either(effect))
+    expect(either).toStrictEqual(Either.left("caught: fail"))
+  })
+
   it("tryPromise - failure, no catch, no AbortSignal", async () => {
     const effect = Effect.tryPromise<void>(() =>
       new Promise((_resolve, reject) => {

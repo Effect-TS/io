@@ -1,6 +1,15 @@
 import * as Effect from "@effect/io/Effect"
 
 describe.concurrent("Effect", () => {
+  it("promise - sync fail", async () => {
+    const effect = Effect.promise(() => {
+      throw "fail"
+      return Promise.resolve("hello")
+    })
+    const exit = await Effect.runPromiseExit(effect)
+    expect(exit._tag).toBe("Failure")
+  })
+
   it("promise - failure, no AbortSignal", async () => {
     const effect = Effect.promise<void>(() => {
       return new Promise((_resolve, reject) => {
