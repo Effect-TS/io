@@ -45,13 +45,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - run: pnpm install
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
-      - run: pnpm run test test/Effect/concurrency.ts --coverage
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
+      - run: pnpm run test test/Effect/concurrency.ts
