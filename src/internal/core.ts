@@ -2254,7 +2254,7 @@ export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> 
 
 /** @internal */
 export const exitGetOrElse = dual<
-  <E, A1, A2>(orElse: (cause: Cause.Cause<E>) => A2) => (self: Exit.Exit<E, A1>) => A1 | A2,
+  <E, A2>(orElse: (cause: Cause.Cause<E>) => A2) => <A1>(self: Exit.Exit<E, A1>) => A1 | A2,
   <E, A1, A2>(self: Exit.Exit<E, A1>, orElse: (cause: Cause.Cause<E>) => A2) => A1 | A2
 >(2, (self, orElse) => {
   switch (self._tag) {
