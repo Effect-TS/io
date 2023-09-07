@@ -247,8 +247,8 @@ export const fromOption: <A>(option: Option.Option<A>) => Exit<void, A> = core.e
  * @category getters
  */
 export const getOrElse: {
-  <E, A>(orElse: (cause: Cause.Cause<E>) => A): (self: Exit<E, A>) => A
-  <E, A>(self: Exit<E, A>, orElse: (cause: Cause.Cause<E>) => A): A
+  <E, A2>(orElse: (cause: Cause.Cause<E>) => A2): <A1>(self: Exit<E, A1>) => A1 | A2
+  <E, A1, A2>(self: Exit<E, A1>, orElse: (cause: Cause.Cause<E>) => A2): A1 | A2
 } = core.exitGetOrElse
 
 /**
@@ -318,13 +318,13 @@ export const mapErrorCause: {
  * @category folding
  */
 export const match: {
-  <E, A, Z>(
-    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }
-  ): (self: Exit<E, A>) => Z
-  <E, A, Z>(
+  <E, A, Z1, Z2>(
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z1; readonly onSuccess: (a: A) => Z2 }
+  ): (self: Exit<E, A>) => Z1 | Z2
+  <E, A, Z1, Z2>(
     self: Exit<E, A>,
-    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z; readonly onSuccess: (a: A) => Z }
-  ): Z
+    options: { readonly onFailure: (cause: Cause.Cause<E>) => Z1; readonly onSuccess: (a: A) => Z2 }
+  ): Z1 | Z2
 } = core.exitMatch
 
 /**
@@ -337,7 +337,7 @@ export const matchEffect: {
       readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
       readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
     }
-  ): (self: Exit<E, A>) => Effect.Effect<R | R2, E3, A3>
+  ): (self: Exit<E, A>) => Effect.Effect<R | R2, E2 | E3, A2 | A3>
   <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit<E, A>,
     options: {
