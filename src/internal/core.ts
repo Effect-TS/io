@@ -2254,8 +2254,8 @@ export const exitFromOption = <A>(option: Option.Option<A>): Exit.Exit<void, A> 
 
 /** @internal */
 export const exitGetOrElse = dual<
-  <E, A>(orElse: (cause: Cause.Cause<E>) => A) => (self: Exit.Exit<E, A>) => A,
-  <E, A>(self: Exit.Exit<E, A>, orElse: (cause: Cause.Cause<E>) => A) => A
+  <E, A1, A2>(orElse: (cause: Cause.Cause<E>) => A2) => (self: Exit.Exit<E, A1>) => A1 | A2,
+  <E, A1, A2>(self: Exit.Exit<E, A1>, orElse: (cause: Cause.Cause<E>) => A2) => A1 | A2
 >(2, (self, orElse) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
@@ -2344,14 +2344,14 @@ export const exitMapErrorCause = dual<
 
 /** @internal */
 export const exitMatch = dual<
-  <E, A, Z>(options: {
-    readonly onFailure: (cause: Cause.Cause<E>) => Z
-    readonly onSuccess: (a: A) => Z
-  }) => (self: Exit.Exit<E, A>) => Z,
-  <E, A, Z>(self: Exit.Exit<E, A>, options: {
-    readonly onFailure: (cause: Cause.Cause<E>) => Z
-    readonly onSuccess: (a: A) => Z
-  }) => Z
+  <E, A, Z1, Z2>(options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Z1
+    readonly onSuccess: (a: A) => Z2
+  }) => (self: Exit.Exit<E, A>) => Z1 | Z2,
+  <E, A, Z1, Z2>(self: Exit.Exit<E, A>, options: {
+    readonly onFailure: (cause: Cause.Cause<E>) => Z1
+    readonly onSuccess: (a: A) => Z2
+  }) => Z1 | Z2
 >(2, (self, { onFailure, onSuccess }) => {
   switch (self._tag) {
     case OpCodes.OP_FAILURE: {
@@ -2370,7 +2370,7 @@ export const exitMatchEffect = dual<
       readonly onFailure: (cause: Cause.Cause<E>) => Effect.Effect<R, E2, A2>
       readonly onSuccess: (a: A) => Effect.Effect<R2, E3, A3>
     }
-  ) => (self: Exit.Exit<E, A>) => Effect.Effect<R | R2, E3 | E3, A3 | A3>,
+  ) => (self: Exit.Exit<E, A>) => Effect.Effect<R | R2, E2 | E3, A2 | A3>,
   <E, A, R, E2, A2, R2, E3, A3>(
     self: Exit.Exit<E, A>,
     options: {
