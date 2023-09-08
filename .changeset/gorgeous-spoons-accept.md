@@ -2,4 +2,4 @@
 "@effect/io": patch
 ---
 
-make Cause Inspectable
+make Effect Inspectable
