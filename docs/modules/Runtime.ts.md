@@ -39,8 +39,6 @@ Added in v1.0.0
   - [FiberFailureCauseId](#fiberfailurecauseid)
   - [FiberFailureId](#fiberfailureid)
   - [FiberFailureId (type alias)](#fiberfailureid-type-alias)
-  - [NodePrint](#nodeprint)
-  - [NodePrint (type alias)](#nodeprint-type-alias)
 
 ---
 
@@ -259,10 +257,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface FiberFailure extends Error {
+export interface FiberFailure extends Error, Inspectable {
   readonly [FiberFailureId]: FiberFailureId
   readonly [FiberFailureCauseId]: Cause<unknown>
-  readonly [NodePrint]: () => string
 }
 ```
 
@@ -332,26 +329,6 @@ Added in v1.0.0
 
 ```ts
 export type FiberFailureId = typeof FiberFailureId
-```
-
-Added in v1.0.0
-
-## NodePrint
-
-**Signature**
-
-```ts
-export declare const NodePrint: typeof NodePrint
-```
-
-Added in v1.0.0
-
-## NodePrint (type alias)
-
-**Signature**
-
-```ts
-export type NodePrint = typeof NodePrint
 ```
 
 Added in v1.0.0
