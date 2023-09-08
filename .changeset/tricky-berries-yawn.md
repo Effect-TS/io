@@ -2,4 +2,4 @@
 "@effect/io": patch
 ---
 
-refactor toJSON / toString
+make Cause inspectable
