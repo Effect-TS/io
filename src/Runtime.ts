@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Context from "@effect/data/Context"
+import type { Inspectable } from "@effect/data/Inspectable"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type { Cause } from "@effect/io/Cause"
 import type * as Effect from "@effect/io/Effect"
@@ -188,24 +189,11 @@ export type FiberFailureCauseId = typeof FiberFailureCauseId
 
 /**
  * @since 1.0.0
- * @category symbols
- */
-export const NodePrint: unique symbol = internal.NodePrint
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type NodePrint = typeof NodePrint
-
-/**
- * @since 1.0.0
  * @category models
  */
-export interface FiberFailure extends Error {
+export interface FiberFailure extends Error, Inspectable {
   readonly [FiberFailureId]: FiberFailureId
   readonly [FiberFailureCauseId]: Cause<unknown>
-  readonly [NodePrint]: () => string
 }
 
 /**

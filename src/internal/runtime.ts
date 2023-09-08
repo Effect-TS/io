@@ -1,5 +1,6 @@
 import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
+import { NodeInspectSymbol, toString } from "@effect/data/Inspectable"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as Predicate from "@effect/data/Predicate"
@@ -127,7 +128,7 @@ const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.Asy
         return () => message
       }
     },
-    [NodePrint]: {
+    [NodeInspectSymbol]: {
       get() {
         return () => message
       }
@@ -150,8 +151,6 @@ export const FiberFailureCauseId: Runtime.FiberFailureCauseId = Symbol.for(
 type Mutable<A> = {
   -readonly [k in keyof A]: A[k]
 }
-/** @internal */
-export const NodePrint: Runtime.NodePrint = Symbol.for("nodejs.util.inspect.custom") as any
 
 /** @internal */
 export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => {
@@ -167,11 +166,17 @@ export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => 
   }
   error[FiberFailureId] = FiberFailureId
   error[FiberFailureCauseId] = cause
-  error.toString = () => {
-    return CausePretty.pretty(cause)
+  error.toJSON = () => {
+    return {
+      _id: "FiberFailure",
+      cause: cause.toJSON()
+    }
   }
-  error[NodePrint] = () => {
-    return error.toString()
+  error.toString = () => {
+    return toString(error.toJSON())
+  }
+  error[NodeInspectSymbol] = () => {
+    return error.toJSON()
   }
   return error
 }
