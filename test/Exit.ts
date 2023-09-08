@@ -11,13 +11,13 @@ describe.concurrent("Exit", () => {
     })
 
     it("fail", () => {
-      expect(Exit.fail("error").toJSON()).toEqual({
+      expect(Exit.fail("failure").toJSON()).toEqual({
         _id: "Exit",
         _tag: "Failure",
         cause: {
           _id: "Cause",
           _tag: "Fail",
-          error: "error"
+          failure: "failure"
         }
       })
     })
@@ -33,13 +33,13 @@ describe.concurrent("Exit", () => {
     })
 
     it("fail", () => {
-      expect(String(Exit.fail("error"))).toEqual(`{
+      expect(String(Exit.fail("failure"))).toEqual(`{
   "_id": "Exit",
   "_tag": "Failure",
   "cause": {
     "_id": "Cause",
     "_tag": "Fail",
-    "error": "error"
+    "failure": "failure"
   }
 }`)
     })

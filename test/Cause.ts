@@ -21,7 +21,7 @@ describe.concurrent("Cause", () => {
       expect(Cause.fail(Option.some(1)).toJSON()).toEqual({
         _id: "Cause",
         _tag: "Fail",
-        error: {
+        failure: {
           _id: "Option",
           _tag: "Some",
           value: 1
@@ -104,7 +104,7 @@ describe.concurrent("Cause", () => {
         left: {
           _id: "Cause",
           _tag: "Fail",
-          error: {
+          failure: {
             _id: "Option",
             _tag: "Some",
             value: 1
@@ -113,7 +113,7 @@ describe.concurrent("Cause", () => {
         right: {
           _id: "Cause",
           _tag: "Fail",
-          error: {
+          failure: {
             _id: "Option",
             _tag: "None"
           }
@@ -128,7 +128,7 @@ describe.concurrent("Cause", () => {
         left: {
           _id: "Cause",
           _tag: "Fail",
-          error: {
+          failure: {
             _id: "Option",
             _tag: "Some",
             value: 1
@@ -137,7 +137,7 @@ describe.concurrent("Cause", () => {
         right: {
           _id: "Cause",
           _tag: "Fail",
-          error: {
+          failure: {
             _id: "Option",
             _tag: "None"
           }
@@ -158,7 +158,7 @@ describe.concurrent("Cause", () => {
       expect(String(Cause.fail(Option.some(1)))).toEqual(`{
   "_id": "Cause",
   "_tag": "Fail",
-  "error": {
+  "failure": {
     "_id": "Option",
     "_tag": "Some",
     "value": 1
@@ -241,7 +241,7 @@ describe.concurrent("Cause", () => {
   "left": {
     "_id": "Cause",
     "_tag": "Fail",
-    "error": {
+    "failure": {
       "_id": "Option",
       "_tag": "Some",
       "value": 1
@@ -250,7 +250,7 @@ describe.concurrent("Cause", () => {
   "right": {
     "_id": "Cause",
     "_tag": "Fail",
-    "error": {
+    "failure": {
       "_id": "Option",
       "_tag": "None"
     }
@@ -265,7 +265,7 @@ describe.concurrent("Cause", () => {
   "left": {
     "_id": "Cause",
     "_tag": "Fail",
-    "error": {
+    "failure": {
       "_id": "Option",
       "_tag": "Some",
       "value": 1
@@ -274,7 +274,7 @@ describe.concurrent("Cause", () => {
   "right": {
     "_id": "Cause",
     "_tag": "Fail",
-    "error": {
+    "failure": {
       "_id": "Option",
       "_tag": "None"
     }

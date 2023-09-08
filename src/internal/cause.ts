@@ -56,7 +56,7 @@ const proto = {
       case "Interrupt":
         return { _id: "Cause", _tag: this._tag, fiberId: this.fiberId.toJSON() }
       case "Fail":
-        return { _id: "Cause", _tag: this._tag, error: toJSON(this.error) }
+        return { _id: "Cause", _tag: this._tag, failure: toJSON(this.error) }
       case "Annotated":
         return { _id: "Cause", _tag: this._tag, cause: this.cause.toJSON(), annotation: toJSON(this.annotation) }
       case "Sequential":
