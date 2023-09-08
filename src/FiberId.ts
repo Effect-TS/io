@@ -3,6 +3,7 @@
  */
 import type * as Equal from "@effect/data/Equal"
 import type * as HashSet from "@effect/data/HashSet"
+import type { Inspectable } from "@effect/data/Inspectable"
 import type * as Option from "@effect/data/Option"
 import * as internal from "@effect/io/internal/fiberId"
 
@@ -28,7 +29,7 @@ export type FiberId = None | Runtime | Composite
  * @since 1.0.0
  * @category models
  */
-export interface None extends Equal.Equal {
+export interface None extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: "None"
 }
@@ -37,7 +38,7 @@ export interface None extends Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Runtime extends Equal.Equal {
+export interface Runtime extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: "Runtime"
   readonly id: number
@@ -48,7 +49,7 @@ export interface Runtime extends Equal.Equal {
  * @since 1.0.0
  * @category models
  */
-export interface Composite extends Equal.Equal {
+export interface Composite extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: "Composite"
   readonly left: FiberId

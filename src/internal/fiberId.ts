@@ -3,6 +3,7 @@ import { dual, pipe } from "@effect/data/Function"
 import { globalValue } from "@effect/data/GlobalValue"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
+import { NodeInspectSymbol, toJSON, toString } from "@effect/data/Inspectable"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import type * as FiberId from "@effect/io/FiberId"
@@ -46,6 +47,18 @@ class None implements FiberId.None {
   [Equal.symbol](that: unknown): boolean {
     return isFiberId(that) && that._tag === OP_NONE
   }
+  toString() {
+    return toString(this.toJSON())
+  }
+  toJSON() {
+    return {
+      _id: "FiberId",
+      _tag: this._tag
+    }
+  }
+  [NodeInspectSymbol]() {
+    return this.toJSON()
+  }
 }
 
 /** @internal */
@@ -70,6 +83,20 @@ class Runtime implements FiberId.Runtime {
       this.id === that.id &&
       this.startTimeMillis === that.startTimeMillis
   }
+  toString() {
+    return toString(this.toJSON())
+  }
+  toJSON() {
+    return {
+      _id: "FiberId",
+      _tag: this._tag,
+      id: this.id,
+      startTimeMillis: this.startTimeMillis
+    }
+  }
+  [NodeInspectSymbol]() {
+    return this.toJSON()
+  }
 }
 
 /** @internal */
@@ -93,6 +120,20 @@ class Composite implements FiberId.Composite {
       that._tag === OP_COMPOSITE &&
       Equal.equals(this.left, that.left) &&
       Equal.equals(this.right, that.right)
+  }
+  toString() {
+    return toString(this.toJSON())
+  }
+  toJSON() {
+    return {
+      _id: "FiberId",
+      _tag: this._tag,
+      left: toJSON(this.left),
+      right: toJSON(this.right)
+    }
+  }
+  [NodeInspectSymbol]() {
+    return this.toJSON()
   }
 }
 

@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import type * as Either from "@effect/data/Either"
+import type { Inspectable } from "@effect/data/Inspectable"
 import type * as Option from "@effect/data/Option"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
@@ -30,7 +31,7 @@ export type Exit<E, A> = Failure<E, A> | Success<E, A>
  * @since 1.0.0
  * @category models
  */
-export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable {
+export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable, Inspectable {
   readonly _tag: "Failure"
   readonly cause: Cause.Cause<E>
   [Unify.typeSymbol]?: unknown
@@ -63,7 +64,7 @@ export interface ExitUnifyBlackList extends Effect.EffectUnifyBlacklist {
  * @since 1.0.0
  * @category models
  */
-export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable {
+export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable, Inspectable {
   readonly _tag: "Success"
   readonly value: A
   [Unify.typeSymbol]?: unknown

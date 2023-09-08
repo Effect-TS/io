@@ -12,6 +12,7 @@ import { dual, identity } from "@effect/data/Function"
 import type * as HashMap from "@effect/data/HashMap"
 import type * as HashSet from "@effect/data/HashSet"
 import type { TypeLambda } from "@effect/data/HKT"
+import type { Inspectable } from "@effect/data/Inspectable"
 import type * as Option from "@effect/data/Option"
 import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
@@ -101,7 +102,7 @@ export type EffectTypeId = typeof EffectTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal, Pipeable {
+export interface Effect<R, E, A> extends Effect.Variance<R, E, A>, Equal.Equal, Pipeable, Inspectable {
   readonly [Unify.typeSymbol]?: unknown
   readonly [Unify.unifySymbol]?: EffectUnify<this>
   readonly [Unify.blacklistSymbol]?: EffectUnifyBlacklist

@@ -3,11 +3,286 @@ import * as Hash from "@effect/data/Hash"
 import * as Option from "@effect/data/Option"
 import * as Predicate from "@effect/data/Predicate"
 import * as Cause from "@effect/io/Cause"
+import * as FiberId from "@effect/io/FiberId"
 import { causes, equalCauses, errorCauseFunctions, errors } from "@effect/io/test/utils/cause"
 import * as fc from "fast-check"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Cause", () => {
+  describe.concurrent("toJSON", () => {
+    it("Empty", () => {
+      expect(Cause.empty.toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Empty"
+      })
+    })
+
+    it("Fail", () => {
+      expect(Cause.fail(Option.some(1)).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Fail",
+        error: {
+          _id: "Option",
+          _tag: "Some",
+          value: 1
+        }
+      })
+    })
+
+    it("Die", () => {
+      expect(Cause.die(Option.some(1)).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Die",
+        defect: {
+          _id: "Option",
+          _tag: "Some",
+          value: 1
+        }
+      })
+    })
+
+    it("Interrupt", () => {
+      expect(Cause.interrupt(FiberId.none).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Interrupt",
+        fiberId: {
+          _id: "FiberId",
+          _tag: "None"
+        }
+      })
+      expect(Cause.interrupt(FiberId.runtime(1, 0)).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Interrupt",
+        fiberId: {
+          _id: "FiberId",
+          _tag: "Runtime",
+          id: 1,
+          startTimeMillis: 0
+        }
+      })
+      expect(Cause.interrupt(FiberId.composite(FiberId.none, FiberId.runtime(1, 0))).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Interrupt",
+        fiberId: {
+          _id: "FiberId",
+          _tag: "Composite",
+          left: {
+            _id: "FiberId",
+            _tag: "None"
+          },
+          right: {
+            _id: "FiberId",
+            _tag: "Runtime",
+            id: 1,
+            startTimeMillis: 0
+          }
+        }
+      })
+    })
+
+    it("Annotated", () => {
+      expect(Cause.annotated(Cause.die(Option.some(1)), "my annotation").toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Annotated",
+        annotation: "my annotation",
+        cause: {
+          _id: "Cause",
+          _tag: "Die",
+          defect: {
+            _id: "Option",
+            _tag: "Some",
+            value: 1
+          }
+        }
+      })
+    })
+
+    it("Sequential", () => {
+      expect(Cause.sequential(Cause.fail(Option.some(1)), Cause.fail(Option.none())).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Sequential",
+        left: {
+          _id: "Cause",
+          _tag: "Fail",
+          error: {
+            _id: "Option",
+            _tag: "Some",
+            value: 1
+          }
+        },
+        right: {
+          _id: "Cause",
+          _tag: "Fail",
+          error: {
+            _id: "Option",
+            _tag: "None"
+          }
+        }
+      })
+    })
+
+    it("Parallel", () => {
+      expect(Cause.parallel(Cause.fail(Option.some(1)), Cause.fail(Option.none())).toJSON()).toEqual({
+        _id: "Cause",
+        _tag: "Parallel",
+        left: {
+          _id: "Cause",
+          _tag: "Fail",
+          error: {
+            _id: "Option",
+            _tag: "Some",
+            value: 1
+          }
+        },
+        right: {
+          _id: "Cause",
+          _tag: "Fail",
+          error: {
+            _id: "Option",
+            _tag: "None"
+          }
+        }
+      })
+    })
+  })
+
+  describe.concurrent("toString", () => {
+    it("Empty", () => {
+      expect(String(Cause.empty)).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Empty"
+}`)
+    })
+
+    it("Fail", () => {
+      expect(String(Cause.fail(Option.some(1)))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Fail",
+  "error": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": 1
+  }
+}`)
+    })
+
+    it("Die", () => {
+      expect(String(Cause.die(Option.some(1)))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Die",
+  "defect": {
+    "_id": "Option",
+    "_tag": "Some",
+    "value": 1
+  }
+}`)
+    })
+
+    it("Interrupt", () => {
+      expect(String(Cause.interrupt(FiberId.none))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Interrupt",
+  "fiberId": {
+    "_id": "FiberId",
+    "_tag": "None"
+  }
+}`)
+      expect(String(Cause.interrupt(FiberId.runtime(1, 0)))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Interrupt",
+  "fiberId": {
+    "_id": "FiberId",
+    "_tag": "Runtime",
+    "id": 1,
+    "startTimeMillis": 0
+  }
+}`)
+      expect(String(Cause.interrupt(FiberId.composite(FiberId.none, FiberId.runtime(1, 0))))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Interrupt",
+  "fiberId": {
+    "_id": "FiberId",
+    "_tag": "Composite",
+    "left": {
+      "_id": "FiberId",
+      "_tag": "None"
+    },
+    "right": {
+      "_id": "FiberId",
+      "_tag": "Runtime",
+      "id": 1,
+      "startTimeMillis": 0
+    }
+  }
+}`)
+    })
+
+    it("Annotated", () => {
+      expect(String(Cause.annotated(Cause.die(Option.some(1)), "my annotation"))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Annotated",
+  "cause": {
+    "_id": "Cause",
+    "_tag": "Die",
+    "defect": {
+      "_id": "Option",
+      "_tag": "Some",
+      "value": 1
+    }
+  },
+  "annotation": "my annotation"
+}`)
+    })
+
+    it("Sequential", () => {
+      expect(String(Cause.sequential(Cause.fail(Option.some(1)), Cause.fail(Option.none())))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Sequential",
+  "left": {
+    "_id": "Cause",
+    "_tag": "Fail",
+    "error": {
+      "_id": "Option",
+      "_tag": "Some",
+      "value": 1
+    }
+  },
+  "right": {
+    "_id": "Cause",
+    "_tag": "Fail",
+    "error": {
+      "_id": "Option",
+      "_tag": "None"
+    }
+  }
+}`)
+    })
+
+    it("Parallel", () => {
+      expect(String(Cause.parallel(Cause.fail(Option.some(1)), Cause.fail(Option.none())))).toEqual(`{
+  "_id": "Cause",
+  "_tag": "Parallel",
+  "left": {
+    "_id": "Cause",
+    "_tag": "Fail",
+    "error": {
+      "_id": "Option",
+      "_tag": "Some",
+      "value": 1
+    }
+  },
+  "right": {
+    "_id": "Cause",
+    "_tag": "Fail",
+    "error": {
+      "_id": "Option",
+      "_tag": "None"
+    }
+  }
+}`)
+    })
+  })
+
   it("should be compared for equality by value", () => {
     assert.isTrue(Equal.equals(Cause.fail(0), Cause.fail(0)))
     assert.isTrue(Equal.equals(Cause.die(0), Cause.die(0)))

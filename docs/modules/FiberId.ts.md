@@ -170,7 +170,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Composite extends Equal.Equal {
+export interface Composite extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: 'Composite'
   readonly left: FiberId
@@ -195,7 +195,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface None extends Equal.Equal {
+export interface None extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: 'None'
 }
@@ -208,7 +208,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Runtime extends Equal.Equal {
+export interface Runtime extends Equal.Equal, Inspectable {
   readonly [FiberIdTypeId]: FiberIdTypeId
   readonly _tag: 'Runtime'
   readonly id: number

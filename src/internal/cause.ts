@@ -4,15 +4,15 @@ import * as Equal from "@effect/data/Equal"
 import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
+import { NodeInspectSymbol, toJSON, toString } from "@effect/data/Inspectable"
+import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/FiberId"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
-
-import * as MRef from "@effect/data/MutableRef"
-import { pipeArguments } from "@effect/data/Pipeable"
 import type { ParentSpan, Span } from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
@@ -47,16 +47,27 @@ const proto = {
   pipe() {
     return pipeArguments(this, arguments)
   },
-  toJSON() {
-    return {
-      _tag: "Cause",
-      errors: prettyErrors(this as any as Cause.Cause<any>)
+  toJSON<E>(this: Cause.Cause<E>) {
+    switch (this._tag) {
+      case "Empty":
+        return { _id: "Cause", _tag: this._tag }
+      case "Die":
+        return { _id: "Cause", _tag: this._tag, defect: toJSON(this.defect) }
+      case "Interrupt":
+        return { _id: "Cause", _tag: this._tag, fiberId: this.fiberId.toJSON() }
+      case "Fail":
+        return { _id: "Cause", _tag: this._tag, error: toJSON(this.error) }
+      case "Annotated":
+        return { _id: "Cause", _tag: this._tag, cause: this.cause.toJSON(), annotation: toJSON(this.annotation) }
+      case "Sequential":
+      case "Parallel":
+        return { _id: "Cause", _tag: this._tag, left: this.left.toJSON(), right: this.right.toJSON() }
     }
   },
-  toString() {
-    return pretty(this as any as Cause.Cause<any>)
+  toString<E>(this: Cause.Cause<E>) {
+    return toString(this.toJSON())
   },
-  [Symbol.for("nodejs.util.inspect.custom")]() {
+  [NodeInspectSymbol]<E>(this: Cause.Cause<E>) {
     return this.toJSON()
   }
 }

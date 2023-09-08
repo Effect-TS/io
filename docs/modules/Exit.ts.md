@@ -455,7 +455,7 @@ of type `E`.
 **Signature**
 
 ```ts
-export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable {
+export interface Failure<E, A> extends Effect.Effect<never, E, A>, Pipeable, Inspectable {
   readonly _tag: 'Failure'
   readonly cause: Cause.Cause<E>
   [Unify.typeSymbol]?: unknown
@@ -476,7 +476,7 @@ of type `A`.
 **Signature**
 
 ```ts
-export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable {
+export interface Success<E, A> extends Effect.Effect<never, E, A>, Pipeable, Inspectable {
   readonly _tag: 'Success'
   readonly value: A
   [Unify.typeSymbol]?: unknown
