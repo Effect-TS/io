@@ -98,50 +98,32 @@ describe.concurrent("Cause", () => {
     })
 
     it("Sequential", () => {
-      expect(Cause.sequential(Cause.fail(Option.some(1)), Cause.fail(Option.none())).toJSON()).toEqual({
+      expect(Cause.sequential(Cause.fail("failure 1"), Cause.fail("failure 2")).toJSON()).toStrictEqual({
         _id: "Cause",
         _tag: "Sequential",
-        left: {
-          _id: "Cause",
-          _tag: "Fail",
-          failure: {
-            _id: "Option",
-            _tag: "Some",
-            value: 1
+        errors: [
+          {
+            message: "Error: failure 1"
+          },
+          {
+            message: "Error: failure 2"
           }
-        },
-        right: {
-          _id: "Cause",
-          _tag: "Fail",
-          failure: {
-            _id: "Option",
-            _tag: "None"
-          }
-        }
+        ]
       })
     })
 
     it("Parallel", () => {
-      expect(Cause.parallel(Cause.fail(Option.some(1)), Cause.fail(Option.none())).toJSON()).toEqual({
+      expect(Cause.parallel(Cause.fail("failure 1"), Cause.fail("failure 2")).toJSON()).toStrictEqual({
         _id: "Cause",
         _tag: "Parallel",
-        left: {
-          _id: "Cause",
-          _tag: "Fail",
-          failure: {
-            _id: "Option",
-            _tag: "Some",
-            value: 1
+        errors: [
+          {
+            message: "Error: failure 1"
+          },
+          {
+            message: "Error: failure 2"
           }
-        },
-        right: {
-          _id: "Cause",
-          _tag: "Fail",
-          failure: {
-            _id: "Option",
-            _tag: "None"
-          }
-        }
+        ]
       })
     })
   })
@@ -235,50 +217,32 @@ describe.concurrent("Cause", () => {
     })
 
     it("Sequential", () => {
-      expect(String(Cause.sequential(Cause.fail(Option.some(1)), Cause.fail(Option.none())))).toEqual(`{
+      expect(String(Cause.sequential(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(`{
   "_id": "Cause",
   "_tag": "Sequential",
-  "left": {
-    "_id": "Cause",
-    "_tag": "Fail",
-    "failure": {
-      "_id": "Option",
-      "_tag": "Some",
-      "value": 1
+  "errors": [
+    {
+      "message": "Error: failure 1"
+    },
+    {
+      "message": "Error: failure 2"
     }
-  },
-  "right": {
-    "_id": "Cause",
-    "_tag": "Fail",
-    "failure": {
-      "_id": "Option",
-      "_tag": "None"
-    }
-  }
+  ]
 }`)
     })
 
     it("Parallel", () => {
-      expect(String(Cause.parallel(Cause.fail(Option.some(1)), Cause.fail(Option.none())))).toEqual(`{
+      expect(String(Cause.parallel(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(`{
   "_id": "Cause",
   "_tag": "Parallel",
-  "left": {
-    "_id": "Cause",
-    "_tag": "Fail",
-    "failure": {
-      "_id": "Option",
-      "_tag": "Some",
-      "value": 1
+  "errors": [
+    {
+      "message": "Error: failure 1"
+    },
+    {
+      "message": "Error: failure 2"
     }
-  },
-  "right": {
-    "_id": "Cause",
-    "_tag": "Fail",
-    "failure": {
-      "_id": "Option",
-      "_tag": "None"
-    }
-  }
+  ]
 }`)
     })
   })

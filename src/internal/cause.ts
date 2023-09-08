@@ -61,7 +61,7 @@ const proto = {
         return { _id: "Cause", _tag: this._tag, cause: this.cause.toJSON(), annotation: toJSON(this.annotation) }
       case "Sequential":
       case "Parallel":
-        return { _id: "Cause", _tag: this._tag, left: this.left.toJSON(), right: this.right.toJSON() }
+        return { _id: "Cause", _tag: this._tag, errors: toJSON(prettyErrors(this)) }
     }
   },
   toString<E>(this: Cause.Cause<E>) {
@@ -1223,14 +1223,6 @@ const defaultErrorToLines = (error: unknown): [string, string | undefined] => {
   return [renderToString(error), void 0]
 }
 
-class RenderError {
-  constructor(
-    readonly message: string,
-    readonly stack: string | undefined,
-    readonly span: Span | undefined
-  ) {}
-}
-
 const filterStack = (stack: string) => {
   const lines = stack.split("\n")
   const out: Array<string> = []
@@ -1275,23 +1267,41 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   return `\r\n${final}\r\n`
 }
 
+class RenderError {
+  constructor(
+    readonly message: string,
+    readonly stack: string | undefined,
+    readonly span: Span | undefined
+  ) {}
+  toJSON() {
+    const out: any = { message: this.message }
+    if (this.stack) {
+      out.stack = this.stack
+    }
+    if (this.span) {
+      out.span = this.span
+    }
+    return out
+  }
+}
+
 /** @internal */
-export const prettyErrors = <E>(cause: Cause.Cause<E>) =>
+export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<RenderError> =>
   reduceWithContext(cause, void 0, {
     emptyCase: (): ReadonlyArray<RenderError> => [],
     dieCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
+      return [new RenderError(rendered[0], rendered[1], undefined)]
     },
     failCase: (_, err) => {
       const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
+      return [new RenderError(rendered[0], rendered[1], undefined)]
     },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
     sequentialCase: (_, l, r) => [...l, ...r],
     annotatedCase: (_, v, annotation) =>
       isSpanAnnotation(annotation) ?
-        v.map((error) => ({ ...error, span: error.span ?? annotation.span })) :
+        v.map((error) => new RenderError(error.message, error.stack, error.span ?? annotation.span)) :
         v
   })
