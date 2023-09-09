@@ -213,120 +213,39 @@ describe.concurrent("Cause", () => {
 
   describe.concurrent("toString", () => {
     it("Empty", () => {
-      expect(String(Cause.empty)).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Empty"
-}`)
+      expect(String(Cause.empty)).toEqual(`All fibers interrupted without errors.`)
     })
 
     it("Fail", () => {
-      expect(String(Cause.fail(Option.some(1)))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Fail",
-  "failure": {
-    "_id": "Option",
-    "_tag": "Some",
-    "value": 1
-  }
-}`)
+      expect(String(Cause.fail("my failure"))).toEqual(`Error: my failure`)
     })
 
     it("Die", () => {
-      expect(String(Cause.die(Option.some(1)))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Die",
-  "defect": {
-    "_id": "Option",
-    "_tag": "Some",
-    "value": 1
-  }
-}`)
+      expect(String(Cause.die("die message"))).toEqual(`Error: die message`)
     })
 
     it("Interrupt", () => {
-      expect(String(Cause.interrupt(FiberId.none))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Interrupt",
-  "fiberId": {
-    "_id": "FiberId",
-    "_tag": "None"
-  }
-}`)
-      expect(String(Cause.interrupt(FiberId.runtime(1, 0)))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Interrupt",
-  "fiberId": {
-    "_id": "FiberId",
-    "_tag": "Runtime",
-    "id": 1,
-    "startTimeMillis": 0
-  }
-}`)
-      expect(String(Cause.interrupt(FiberId.composite(FiberId.none, FiberId.runtime(1, 0))))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Interrupt",
-  "fiberId": {
-    "_id": "FiberId",
-    "_tag": "Composite",
-    "left": {
-      "_id": "FiberId",
-      "_tag": "None"
-    },
-    "right": {
-      "_id": "FiberId",
-      "_tag": "Runtime",
-      "id": 1,
-      "startTimeMillis": 0
-    }
-  }
-}`)
+      expect(String(Cause.interrupt(FiberId.none))).toEqual(`All fibers interrupted without errors.`)
+      expect(String(Cause.interrupt(FiberId.runtime(1, 0)))).toEqual(`All fibers interrupted without errors.`)
+      expect(String(Cause.interrupt(FiberId.composite(FiberId.none, FiberId.runtime(1, 0))))).toEqual(
+        `All fibers interrupted without errors.`
+      )
     })
 
     it("Annotated", () => {
-      expect(String(Cause.annotated(Cause.die(Option.some(1)), "my annotation"))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Annotated",
-  "cause": {
-    "_id": "Cause",
-    "_tag": "Die",
-    "defect": {
-      "_id": "Option",
-      "_tag": "Some",
-      "value": 1
-    }
-  },
-  "annotation": "my annotation"
-}`)
+      expect(String(Cause.annotated(Cause.die("die message"), "my annotation"))).toEqual(`Error: die message`)
     })
 
     it("Sequential", () => {
-      expect(String(Cause.sequential(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Sequential",
-  "errors": [
-    {
-      "message": "Error: failure 1"
-    },
-    {
-      "message": "Error: failure 2"
-    }
-  ]
-}`)
+      expect(String(Cause.sequential(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(
+        `Error: failure 1\r\nError: failure 2`
+      )
     })
 
     it("Parallel", () => {
-      expect(String(Cause.parallel(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(`{
-  "_id": "Cause",
-  "_tag": "Parallel",
-  "errors": [
-    {
-      "message": "Error: failure 1"
-    },
-    {
-      "message": "Error: failure 2"
-    }
-  ]
-}`)
+      expect(String(Cause.parallel(Cause.fail("failure 1"), Cause.fail("failure 2")))).toEqual(
+        `Error: failure 1\r\nError: failure 2`
+      )
     })
   })
 

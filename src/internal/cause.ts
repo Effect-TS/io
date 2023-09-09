@@ -4,7 +4,7 @@ import * as Equal from "@effect/data/Equal"
 import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
-import { NodeInspectSymbol, toJSON, toString } from "@effect/data/Inspectable"
+import { NodeInspectSymbol, toJSON } from "@effect/data/Inspectable"
 import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
@@ -65,7 +65,7 @@ const proto = {
     }
   },
   toString<E>(this: Cause.Cause<E>) {
-    return toString(this.toJSON())
+    return pretty(this)
   },
   [NodeInspectSymbol]<E>(this: Cause.Cause<E>) {
     return this.toJSON()
@@ -1221,11 +1221,8 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
       }
     }
     return message
-  }).join("\r\n\r\n")
-  if (!final.includes("\r\n")) {
-    return final
-  }
-  return `\r\n${final}\r\n`
+  }).join("\r\n")
+  return final
 }
 
 class PrettyError {
