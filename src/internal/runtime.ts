@@ -12,7 +12,7 @@ import * as FiberId from "@effect/io/FiberId"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { NoSuchElementException } from "@effect/io/internal/cause"
-import * as CausePretty from "@effect/io/internal/cause"
+import * as InternalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
@@ -158,11 +158,12 @@ export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => 
   Error.stackTraceLimit = 0
   const error = (new Error()) as Mutable<Runtime.FiberFailure>
   Error.stackTraceLimit = limit
-  const pretty = CausePretty.prettyErrors(cause)
-  if (pretty.length > 0) {
-    error.name = pretty[0].message.split(":")[0]
-    error.message = pretty[0].message.substring(error.name.length + 2)
-    error.stack = `${error.name}: ${error.message}\n${pretty[0].stack}`
+  const prettyErrors = InternalCause.prettyErrors(cause)
+  if (prettyErrors.length > 0) {
+    const head = prettyErrors[0]
+    error.name = head.message.split(":")[0]
+    error.message = head.message.substring(error.name.length + 2)
+    error.stack = `${error.name}: ${error.message}\n${head.stack}`
   }
   error[FiberFailureId] = FiberFailureId
   error[FiberFailureCauseId] = cause

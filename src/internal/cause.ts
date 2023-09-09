@@ -1228,7 +1228,7 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
   return `\r\n${final}\r\n`
 }
 
-class RenderError {
+class PrettyError {
   constructor(
     readonly message: string,
     readonly stack: string | undefined,
@@ -1276,21 +1276,21 @@ const renderToString = (u: unknown): string => {
   return `Error: ${JSON.stringify(u)}`
 }
 
-const defaultRenderError = (error: unknown): RenderError => {
+const defaultRenderError = (error: unknown): PrettyError => {
   if (error instanceof Error) {
-    return new RenderError(
+    return new PrettyError(
       renderToString(error),
       error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n"),
       void 0
     )
   }
-  return new RenderError(renderToString(error), void 0, void 0)
+  return new PrettyError(renderToString(error), void 0, void 0)
 }
 
 /** @internal */
-export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<RenderError> =>
+export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<PrettyError> =>
   reduceWithContext(cause, void 0, {
-    emptyCase: (): ReadonlyArray<RenderError> => [],
+    emptyCase: (): ReadonlyArray<PrettyError> => [],
     dieCase: (_, unknownError) => {
       return [defaultRenderError(unknownError)]
     },
@@ -1302,6 +1302,6 @@ export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<RenderErro
     sequentialCase: (_, l, r) => [...l, ...r],
     annotatedCase: (_, renderErrors, annotation) =>
       isSpanAnnotation(annotation) ?
-        renderErrors.map((error) => new RenderError(error.message, error.stack, error.span ?? annotation.span)) :
+        renderErrors.map((error) => new PrettyError(error.message, error.stack, error.span ?? annotation.span)) :
         renderErrors
   })
