@@ -20,6 +20,20 @@ describe.concurrent("Exit", () => {
           failure: "failure"
         }
       })
+      class MyError {
+        readonly _tag = "MyError"
+      }
+      expect(Exit.fail(new MyError()).toJSON()).toEqual({
+        _id: "Exit",
+        _tag: "Failure",
+        cause: {
+          _id: "Cause",
+          _tag: "Fail",
+          failure: {
+            _tag: "MyError"
+          }
+        }
+      })
     })
   })
 
@@ -40,6 +54,20 @@ describe.concurrent("Exit", () => {
     "_id": "Cause",
     "_tag": "Fail",
     "failure": "failure"
+  }
+}`)
+      class MyError {
+        readonly _tag = "MyError"
+      }
+      expect(String(Exit.fail(new MyError()))).toEqual(`{
+  "_id": "Exit",
+  "_tag": "Failure",
+  "cause": {
+    "_id": "Cause",
+    "_tag": "Fail",
+    "failure": {
+      "_tag": "MyError"
+    }
   }
 }`)
     })
