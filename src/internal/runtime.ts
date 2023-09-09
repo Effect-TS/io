@@ -1,5 +1,6 @@
 import * as Context from "@effect/data/Context"
 import { pipe } from "@effect/data/Function"
+import { NodeInspectSymbol, toString } from "@effect/data/Inspectable"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import * as Predicate from "@effect/data/Predicate"
@@ -11,7 +12,7 @@ import * as FiberId from "@effect/io/FiberId"
 import type * as FiberRef from "@effect/io/FiberRef"
 import * as FiberRefs from "@effect/io/FiberRefs"
 import { NoSuchElementException } from "@effect/io/internal/cause"
-import * as CausePretty from "@effect/io/internal/cause"
+import * as InternalCause from "@effect/io/internal/cause"
 import * as core from "@effect/io/internal/core"
 import * as FiberRuntime from "@effect/io/internal/fiberRuntime"
 import * as fiberScope from "@effect/io/internal/fiberScope"
@@ -127,7 +128,7 @@ const asyncFiberException = <E, A>(fiber: Fiber.RuntimeFiber<E, A>): Runtime.Asy
         return () => message
       }
     },
-    [NodePrint]: {
+    [NodeInspectSymbol]: {
       get() {
         return () => message
       }
@@ -150,8 +151,6 @@ export const FiberFailureCauseId: Runtime.FiberFailureCauseId = Symbol.for(
 type Mutable<A> = {
   -readonly [k in keyof A]: A[k]
 }
-/** @internal */
-export const NodePrint: Runtime.NodePrint = Symbol.for("nodejs.util.inspect.custom") as any
 
 /** @internal */
 export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => {
@@ -159,19 +158,26 @@ export const fiberFailure = <E>(cause: Cause.Cause<E>): Runtime.FiberFailure => 
   Error.stackTraceLimit = 0
   const error = (new Error()) as Mutable<Runtime.FiberFailure>
   Error.stackTraceLimit = limit
-  const pretty = CausePretty.prettyErrors(cause)
-  if (pretty.length > 0) {
-    error.name = pretty[0].message.split(":")[0]
-    error.message = pretty[0].message.substring(error.name.length + 2)
-    error.stack = `${error.name}: ${error.message}\n${pretty[0].stack}`
+  const prettyErrors = InternalCause.prettyErrors(cause)
+  if (prettyErrors.length > 0) {
+    const head = prettyErrors[0]
+    error.name = head.message.split(":")[0]
+    error.message = head.message.substring(error.name.length + 2)
+    error.stack = `${error.name}: ${error.message}\n${head.stack}`
   }
   error[FiberFailureId] = FiberFailureId
   error[FiberFailureCauseId] = cause
-  error.toString = () => {
-    return CausePretty.pretty(cause)
+  error.toJSON = () => {
+    return {
+      _id: "FiberFailure",
+      cause: cause.toJSON()
+    }
   }
-  error[NodePrint] = () => {
-    return error.toString()
+  error.toString = () => {
+    return toString(error.toJSON())
+  }
+  error[NodeInspectSymbol] = () => {
+    return error.toJSON()
   }
   return error
 }

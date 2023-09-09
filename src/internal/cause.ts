@@ -4,15 +4,15 @@ import * as Equal from "@effect/data/Equal"
 import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Function"
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
+import { NodeInspectSymbol, toJSON } from "@effect/data/Inspectable"
+import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
+import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/FiberId"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
-
-import * as MRef from "@effect/data/MutableRef"
-import { pipeArguments } from "@effect/data/Pipeable"
 import type { ParentSpan, Span } from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
@@ -47,16 +47,27 @@ const proto = {
   pipe() {
     return pipeArguments(this, arguments)
   },
-  toJSON() {
-    return {
-      _tag: "Cause",
-      errors: prettyErrors(this as any as Cause.Cause<any>)
+  toJSON<E>(this: Cause.Cause<E>) {
+    switch (this._tag) {
+      case "Empty":
+        return { _id: "Cause", _tag: this._tag }
+      case "Die":
+        return { _id: "Cause", _tag: this._tag, defect: toJSON(this.defect) }
+      case "Interrupt":
+        return { _id: "Cause", _tag: this._tag, fiberId: this.fiberId.toJSON() }
+      case "Fail":
+        return { _id: "Cause", _tag: this._tag, failure: toJSON(this.error) }
+      case "Annotated":
+        return { _id: "Cause", _tag: this._tag, cause: this.cause.toJSON(), annotation: toJSON(this.annotation) }
+      case "Sequential":
+      case "Parallel":
+        return { _id: "Cause", _tag: this._tag, errors: toJSON(prettyErrors(this)) }
     }
   },
-  toString() {
-    return pretty(this as any as Cause.Cause<any>)
+  toString<E>(this: Cause.Cause<E>) {
+    return pretty(this)
   },
-  [Symbol.for("nodejs.util.inspect.custom")]() {
+  [NodeInspectSymbol]<E>(this: Cause.Cause<E>) {
     return this.toJSON()
   }
 }
@@ -1173,53 +1184,6 @@ export const unannotate = <E>(self: Cause.Cause<E>) => reduceWithContext(self, v
 // Pretty Printing
 // -----------------------------------------------------------------------------
 
-/** @internal */
-const renderToString = (u: unknown): string => {
-  if (
-    typeof u === "object" &&
-    u != null &&
-    "toString" in u &&
-    typeof u["toString"] === "function" &&
-    u["toString"] !== Object.prototype.toString
-  ) {
-    return u["toString"]()
-  }
-  if (typeof u === "string") {
-    return `Error: ${u}`
-  }
-  if (typeof u === "object" && u !== null) {
-    if ("message" in u && typeof u["message"] === "string") {
-      const raw = JSON.parse(JSON.stringify(u))
-      const keys = new Set(Object.keys(raw))
-      keys.delete("name")
-      keys.delete("message")
-      keys.delete("_tag")
-      if (keys.size === 0) {
-        return `${"name" in u && typeof u.name === "string" ? u.name : "Error"}${
-          "_tag" in u && typeof u["_tag"] === "string" ? `(${u._tag})` : ``
-        }: ${u.message}`
-      }
-    }
-  }
-  return `Error: ${JSON.stringify(u)}`
-}
-
-/** @internal */
-const defaultErrorToLines = (error: unknown): [string, string | undefined] => {
-  if (error instanceof Error) {
-    return [renderToString(error), error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n")]
-  }
-  return [renderToString(error), void 0]
-}
-
-class RenderError {
-  constructor(
-    readonly message: string,
-    readonly stack: string | undefined,
-    readonly span: Span | undefined
-  ) {}
-}
-
 const filterStack = (stack: string) => {
   const lines = stack.split("\n")
   const out: Array<string> = []
@@ -1257,30 +1221,102 @@ export const pretty = <E>(cause: Cause.Cause<E>): string => {
       }
     }
     return message
-  }).join("\r\n\r\n")
-  if (!final.includes("\r\n")) {
-    return final
+  }).join("\r\n")
+  return final
+}
+
+class PrettyError {
+  constructor(
+    readonly message: string,
+    readonly stack: string | undefined,
+    readonly span: Span | undefined
+  ) {}
+  toJSON() {
+    const out: any = { message: this.message }
+    if (this.stack) {
+      out.stack = this.stack
+    }
+    if (this.span) {
+      out.span = this.span
+    }
+    return out
   }
-  return `\r\n${final}\r\n`
+}
+
+/**
+ * A utility function for generating human-readable error messages from a generic error of type `unknown`.
+ *
+ * Rules:
+ *
+ * 1) If the input `u` is already a string, it's considered a message, and "Error" is added as a prefix.
+ * 2) If `u` has a user-defined `toString()` method, it uses that method and adds "Error" as a prefix.
+ * 3) If `u` is an object and its only (optional) properties are "name", "message", or "_tag", it constructs
+ *    an error message based on those properties.
+ * 4) Otherwise, it uses `JSON.stringify` to produce a string representation and uses it as the error message,
+ *   with "Error" added as a prefix.
+ *
+ * @internal
+ */
+export const prettyErrorMessage = (u: unknown): string => {
+  // 1)
+  if (typeof u === "string") {
+    return `Error: ${u}`
+  }
+  // 2)
+  if (
+    typeof u === "object" &&
+    u != null &&
+    "toString" in u &&
+    typeof u["toString"] === "function" &&
+    u["toString"] !== Object.prototype.toString
+  ) {
+    return `Error: ${u["toString"]()}`
+  }
+  // 3)
+  if (typeof u === "object" && u !== null) {
+    if ("message" in u && typeof u["message"] === "string") {
+      const raw = JSON.parse(JSON.stringify(u))
+      const keys = new Set(Object.keys(raw))
+      keys.delete("name")
+      keys.delete("message")
+      keys.delete("_tag")
+      if (keys.size === 0) {
+        const name = "name" in u && typeof u.name === "string" ? u.name : "Error"
+        const tag = "_tag" in u && typeof u["_tag"] === "string" ? `(${u._tag})` : ``
+        return `${name}${tag}: ${u.message}`
+      }
+    }
+  }
+  // 4)
+  return `Error: ${JSON.stringify(u)}`
+}
+
+const defaultRenderError = (error: unknown): PrettyError => {
+  if (error instanceof Error) {
+    return new PrettyError(
+      prettyErrorMessage(error),
+      error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n"),
+      void 0
+    )
+  }
+  return new PrettyError(prettyErrorMessage(error), void 0, void 0)
 }
 
 /** @internal */
-export const prettyErrors = <E>(cause: Cause.Cause<E>) =>
+export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<PrettyError> =>
   reduceWithContext(cause, void 0, {
-    emptyCase: (): ReadonlyArray<RenderError> => [],
-    dieCase: (_, err) => {
-      const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
+    emptyCase: (): ReadonlyArray<PrettyError> => [],
+    dieCase: (_, unknownError) => {
+      return [defaultRenderError(unknownError)]
     },
-    failCase: (_, err) => {
-      const rendered = defaultErrorToLines(err)
-      return [{ message: rendered[0], stack: rendered[1], span: undefined }]
+    failCase: (_, error) => {
+      return [defaultRenderError(error)]
     },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
     sequentialCase: (_, l, r) => [...l, ...r],
-    annotatedCase: (_, v, annotation) =>
+    annotatedCase: (_, renderErrors, annotation) =>
       isSpanAnnotation(annotation) ?
-        v.map((error) => ({ ...error, span: error.span ?? annotation.span })) :
-        v
+        renderErrors.map((error) => new PrettyError(error.message, error.stack, error.span ?? annotation.span)) :
+        renderErrors
   })

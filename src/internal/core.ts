@@ -9,13 +9,14 @@ import { globalValue } from "@effect/data/GlobalValue"
 import * as Hash from "@effect/data/Hash"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
+import { NodeInspectSymbol, toJSON, toString } from "@effect/data/Inspectable"
 import * as List from "@effect/data/List"
 import * as MutableRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate, Refinement } from "@effect/data/Predicate"
 import * as ReadonlyArray from "@effect/data/ReadonlyArray"
-import * as Cause from "@effect/io/Cause"
+import type * as Cause from "@effect/io/Cause"
 import type * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
 import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
@@ -160,6 +161,21 @@ class EffectPrimitive {
   pipe() {
     return pipeArguments(this, arguments)
   }
+  toJSON() {
+    return {
+      _id: "Effect",
+      _tag: this._tag,
+      i0: toJSON(this.i0),
+      i1: toJSON(this.i1),
+      i2: toJSON(this.i2)
+    }
+  }
+  toString() {
+    return toString(this.toJSON())
+  }
+  [NodeInspectSymbol]() {
+    return this.toJSON()
+  }
 }
 
 /** @internal */
@@ -184,14 +200,15 @@ class EffectPrimitiveFailure {
   }
   toJSON() {
     return {
+      _id: "Exit",
       _tag: this._tag,
       cause: (this.cause as any).toJSON()
     }
   }
   toString() {
-    return Cause.pretty(this.cause as any as Cause.Cause<unknown>)
+    return toString(this.toJSON())
   }
-  [Symbol.for("nodejs.util.inspect.custom")]() {
+  [NodeInspectSymbol]() {
     return this.toJSON()
   }
 }
@@ -218,14 +235,15 @@ class EffectPrimitiveSuccess {
   }
   toJSON() {
     return {
+      _id: "Exit",
       _tag: this._tag,
-      value: this.value
+      value: toJSON(this.value)
     }
   }
   toString() {
-    return `Success: ${String(this.value)}`
+    return toString(this.toJSON())
   }
-  [Symbol.for("nodejs.util.inspect.custom")]() {
+  [NodeInspectSymbol]() {
     return this.toJSON()
   }
 }

@@ -734,7 +734,7 @@ For example, we can annotate a `Cause` with a trace to assist in debugging.
 **Signature**
 
 ```ts
-export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal, Pipeable {
+export interface Annotated<E> extends Cause.Variance<E>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Annotated'
   readonly cause: Cause<E>
   readonly annotation: unknown
@@ -792,7 +792,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Die extends Cause.Variance<never>, Equal.Equal, Pipeable {
+export interface Die extends Cause.Variance<never>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Die'
   readonly defect: unknown
 }
@@ -807,7 +807,7 @@ The `Empty` cause represents a lack of errors.
 **Signature**
 
 ```ts
-export interface Empty extends Cause.Variance<never>, Equal.Equal, Pipeable {
+export interface Empty extends Cause.Variance<never>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Empty'
 }
 ```
@@ -822,7 +822,7 @@ type `E`.
 **Signature**
 
 ```ts
-export interface Fail<E> extends Cause.Variance<E>, Equal.Equal, Pipeable {
+export interface Fail<E> extends Cause.Variance<E>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Fail'
   readonly error: E
 }
@@ -855,7 +855,7 @@ contains the `FiberId` of the interrupted `Fiber`.
 **Signature**
 
 ```ts
-export interface Interrupt extends Cause.Variance<never>, Equal.Equal, Pipeable {
+export interface Interrupt extends Cause.Variance<never>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Interrupt'
   readonly fiberId: FiberId.FiberId
 }
@@ -927,7 +927,7 @@ occurred in parallel. In these cases, the errors can be represented by the
 **Signature**
 
 ```ts
-export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal, Pipeable {
+export interface Parallel<E> extends Cause.Variance<E>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Parallel'
   readonly left: Cause<E>
   readonly right: Cause<E>
@@ -965,7 +965,7 @@ represented by the `Sequential` cause.
 **Signature**
 
 ```ts
-export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal, Pipeable {
+export interface Sequential<E> extends Cause.Variance<E>, Equal.Equal, Pipeable, Inspectable {
   readonly _tag: 'Sequential'
   readonly left: Cause<E>
   readonly right: Cause<E>
