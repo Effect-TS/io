@@ -1,5 +1,23 @@
 # @effect/io
 
+## 0.40.1
+
+### Patch Changes
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - make Exit Inspectable
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - make Effect Inspectable
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - make FiberFailure Inspectable
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - update /data (to 0.18.5)
+
+- [#657](https://github.com/Effect-TS/io/pull/657) [`6f95e0f`](https://github.com/Effect-TS/io/commit/6f95e0fee37d9ee1b93d31187152d98130a1fc3c) Thanks [@KhraksMamtsov](https://github.com/KhraksMamtsov)! - change signature Exit functions
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - make FiberId Inspectable
+
+- [#658](https://github.com/Effect-TS/io/pull/658) [`c76f6db`](https://github.com/Effect-TS/io/commit/c76f6dbec0b9ddeac51f3bf45fc04ef22548a80d) Thanks [@gcanti](https://github.com/gcanti)! - make Cause Inspectable
+
 ## 0.40.0
 
 ### Minor Changes
