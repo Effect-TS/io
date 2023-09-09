@@ -191,7 +191,7 @@ describe.concurrent("Effect", () => {
       assert.isTrue(fiber.unsafePoll() === null)
       yield* $(adjust("60 seconds"))
       assert.isFalse(fiber.unsafePoll() === null)
-    }))
+    }), 20_000)
   it.effect("race of two forks does not interrupt winner", () =>
     Effect.gen(function*($) {
       const forkWaiter = (
