@@ -56,17 +56,17 @@ describe.concurrent("Exit", () => {
     "failure": "failure"
   }
 }`)
-      class MyError {
-        readonly _tag = "MyError"
+      class Error1 {
+        readonly _tag = "WithTag"
       }
-      expect(String(Exit.fail(new MyError()))).toEqual(`{
+      expect(String(Exit.fail(new Error1()))).toEqual(`{
   "_id": "Exit",
   "_tag": "Failure",
   "cause": {
     "_id": "Cause",
     "_tag": "Fail",
     "failure": {
-      "_tag": "MyError"
+      "_tag": "WithTag"
     }
   }
 }`)

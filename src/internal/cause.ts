@@ -1246,7 +1246,26 @@ class PrettyError {
   }
 }
 
-const renderToString = (u: unknown): string => {
+/**
+ * A utility function for generating human-readable error messages from a generic error of type `unknown`.
+ *
+ * Rules:
+ *
+ * 1) If the input `u` is already a string, it's considered a message, and "Error" is added as a prefix.
+ * 2) If `u` has a user-defined `toString()` method, it uses that method and adds "Error" as a prefix.
+ * 3) If `u` is an object and its only (optional) properties are "name", "message", or "_tag", it constructs
+ *    an error message based on those properties.
+ * 4) Otherwise, it uses `JSON.stringify` to produce a string representation and uses it as the error message,
+ *   with "Error" added as a prefix.
+ *
+ * @internal
+ */
+export const prettyErrorMessage = (u: unknown): string => {
+  // 1)
+  if (typeof u === "string") {
+    return `Error: ${u}`
+  }
+  // 2)
   if (
     typeof u === "object" &&
     u != null &&
@@ -1254,11 +1273,9 @@ const renderToString = (u: unknown): string => {
     typeof u["toString"] === "function" &&
     u["toString"] !== Object.prototype.toString
   ) {
-    return u["toString"]()
+    return `Error: ${u["toString"]()}`
   }
-  if (typeof u === "string") {
-    return `Error: ${u}`
-  }
+  // 3)
   if (typeof u === "object" && u !== null) {
     if ("message" in u && typeof u["message"] === "string") {
       const raw = JSON.parse(JSON.stringify(u))
@@ -1267,24 +1284,25 @@ const renderToString = (u: unknown): string => {
       keys.delete("message")
       keys.delete("_tag")
       if (keys.size === 0) {
-        return `${"name" in u && typeof u.name === "string" ? u.name : "Error"}${
-          "_tag" in u && typeof u["_tag"] === "string" ? `(${u._tag})` : ``
-        }: ${u.message}`
+        const name = "name" in u && typeof u.name === "string" ? u.name : "Error"
+        const tag = "_tag" in u && typeof u["_tag"] === "string" ? `(${u._tag})` : ``
+        return `${name}${tag}: ${u.message}`
       }
     }
   }
+  // 4)
   return `Error: ${JSON.stringify(u)}`
 }
 
 const defaultRenderError = (error: unknown): PrettyError => {
   if (error instanceof Error) {
     return new PrettyError(
-      renderToString(error),
+      prettyErrorMessage(error),
       error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n"),
       void 0
     )
   }
-  return new PrettyError(renderToString(error), void 0, void 0)
+  return new PrettyError(prettyErrorMessage(error), void 0, void 0)
 }
 
 /** @internal */
