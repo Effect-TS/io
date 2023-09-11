@@ -1,7 +1,7 @@
 import * as Effect from "@effect/io/Effect"
+import * as timeout from "@effect/io/internal/timeout"
 import * as Scheduler from "@effect/io/Scheduler"
 import * as it from "@effect/io/test/utils/extend"
-import { setTimeout } from "@effect/io/test/utils/timeout"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
@@ -15,21 +15,21 @@ describe.concurrent("Effect", () => {
           0,
           Scheduler.makeBatched((runBatch) => {
             ps000.push(0)
-            setTimeout(runBatch, 0)
+            timeout.set(runBatch, 0)
           })
         ],
         [
           100,
           Scheduler.makeBatched((runBatch) => {
             ps100.push(100)
-            setTimeout(runBatch, 0)
+            timeout.set(runBatch, 0)
           })
         ],
         [
           200,
           Scheduler.makeBatched((runBatch) => {
             ps200.push(200)
-            setTimeout(runBatch, 0)
+            timeout.set(runBatch, 0)
           })
         ],
         [

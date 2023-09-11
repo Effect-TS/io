@@ -2729,33 +2729,3 @@ const deferredInterruptJoiner = <E, A>(
       )
     }
   })
-
-// -----------------------------------------------------------------------------
-// Timeout
-// -----------------------------------------------------------------------------
-
-/**
- * Bun currently has a bug where `setTimeout` doesn't behave correctly with a 0ms delay.
- *
- * @see https://github.com/oven-sh/bun/issues/3333
- */
-
-/** @internal */
-const isBun = !!((process as any)?.isBun)
-
-/** @internal */
-const clearTimeout_: (id: NodeJS.Timeout) => void = isBun ? clearInterval : clearTimeout
-
-/** @internal */
-const setTimeout_: (fn: () => void, ms: number) => NodeJS.Timeout = isBun ?
-  (fn: () => void, ms: number) => {
-    const id = setInterval(() => {
-      fn()
-      clearInterval(id)
-    }, ms)
-
-    return id
-  } :
-  setTimeout
-
-export { clearTimeout_ as clearTimeout, setTimeout_ as setTimeout }

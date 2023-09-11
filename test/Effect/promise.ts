@@ -1,5 +1,5 @@
 import * as Effect from "@effect/io/Effect"
-import { setTimeout } from "@effect/io/test/utils/timeout"
+import * as timeout from "@effect/io/internal/timeout"
 
 describe.concurrent("Effect", () => {
   it("promise - success with AbortSignal", async () => {
@@ -9,7 +9,7 @@ describe.concurrent("Effect", () => {
         aborted = true
       })
       return new Promise((resolve) => {
-        setTimeout(() => {
+        timeout.set(() => {
           resolve()
         }, 100)
       })

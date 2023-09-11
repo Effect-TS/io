@@ -5,6 +5,7 @@ import { constFalse } from "@effect/data/Function"
 import type * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import * as core from "@effect/io/internal/core"
+import * as timeout from "@effect/io/internal/timeout"
 
 /** @internal */
 const ClockSymbolKey = "@effect/io/Clock"
@@ -28,12 +29,12 @@ export const globalClockScheduler: Clock.ClockScheduler = {
       return constFalse
     }
     let completed = false
-    const handle = core.setTimeout(() => {
+    const handle = timeout.set(() => {
       completed = true
       task()
     }, millis)
     return () => {
-      core.clearTimeout(handle)
+      timeout.clear(handle)
       return !completed
     }
   }
