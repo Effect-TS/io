@@ -38,7 +38,7 @@ describe.concurrent("Cause", () => {
     class Error5 {
       readonly _tag = "WithToString"
       toString() {
-        return "my string"
+        return "Error: my string"
       }
     }
     expect(internal.prettyErrorMessage(new Error5())).toEqual(
@@ -75,7 +75,7 @@ describe.concurrent("Cause", () => {
       class Error5 {
         readonly _tag = "WithToString"
         toString() {
-          return "my string"
+          return "Error: my string"
         }
       }
       expect(Cause.pretty(Cause.fail(new Error5()))).toEqual(`Error: my string`)
@@ -163,23 +163,6 @@ describe.concurrent("Cause", () => {
       })
     })
 
-    it("Annotated", () => {
-      expect(Cause.annotated(Cause.die(Option.some(1)), "my annotation").toJSON()).toEqual({
-        _id: "Cause",
-        _tag: "Annotated",
-        annotation: "my annotation",
-        cause: {
-          _id: "Cause",
-          _tag: "Die",
-          defect: {
-            _id: "Option",
-            _tag: "Some",
-            value: 1
-          }
-        }
-      })
-    })
-
     it("Sequential", () => {
       expect(Cause.sequential(Cause.fail("failure 1"), Cause.fail("failure 2")).toJSON()).toStrictEqual({
         _id: "Cause",
@@ -230,10 +213,6 @@ describe.concurrent("Cause", () => {
       expect(String(Cause.interrupt(FiberId.composite(FiberId.none, FiberId.runtime(1, 0))))).toEqual(
         `All fibers interrupted without errors.`
       )
-    })
-
-    it("Annotated", () => {
-      expect(String(Cause.annotated(Cause.die("die message"), "my annotation"))).toEqual(`Error: die message`)
     })
 
     it("Sequential", () => {

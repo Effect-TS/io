@@ -1082,15 +1082,6 @@ export class FiberRuntime<E, A> implements Fiber.RuntimeFiber<E, A> {
     }
   }
 
-  [OpCodes.OP_FAILURE_WITH_ANNOTATION](op: core.Primitive & { _tag: OpCodes.OP_FAILURE_WITH_ANNOTATION }) {
-    const span = this.getFiberRef(core.currentTracerSpan)
-    const cause = List.isNil(span) || span.head._tag === "ExternalSpan" ?
-      op.i0(identity) :
-      // @ts-expect-error
-      op.i0((c) => internalCause.annotated(c, internalCause.makeSpanAnnotation(span.head)))
-    return core.exitFailCause(cause)
-  }
-
   [OpCodes.OP_FAILURE](op: core.Primitive & { _tag: OpCodes.OP_FAILURE }) {
     const cause = op.i0
     const cont = this.getNextFailCont()
@@ -1467,18 +1458,24 @@ export const addFinalizer = <R, X>(
   core.withFiberRuntime(
     (runtime) => {
       const acquireRefs = runtime.getFiberRefs()
+      const acquireFlags = runtime._runtimeFlags
       return core.flatMap(scope, (scope) =>
         core.scopeAddFinalizerExit(scope, (exit) =>
           core.withFiberRuntime((runtimeFinalizer) => {
-            const pre = runtimeFinalizer.getFiberRefs()
-            const patch = FiberRefsPatch.diff(pre, acquireRefs)
-            const inverse = FiberRefsPatch.diff(acquireRefs, pre)
-            runtimeFinalizer.setFiberRefs(FiberRefsPatch.patch(patch, runtimeFinalizer.id(), acquireRefs))
+            const preRefs = runtimeFinalizer.getFiberRefs()
+            const preFlags = runtimeFinalizer._runtimeFlags
+            const patchRefs = FiberRefsPatch.diff(preRefs, acquireRefs)
+            const patchFlags = _runtimeFlags.diff(preFlags, acquireFlags)
+            const inverseRefs = FiberRefsPatch.diff(acquireRefs, preRefs)
+            runtimeFinalizer.setFiberRefs(
+              FiberRefsPatch.patch(patchRefs, runtimeFinalizer.id(), acquireRefs)
+            )
+
             return ensuring(
-              finalizer(exit) as Effect.Effect<never, never, X>,
+              core.withRuntimeFlags(finalizer(exit) as Effect.Effect<never, never, X>, patchFlags),
               core.sync(() => {
                 runtimeFinalizer.setFiberRefs(
-                  FiberRefsPatch.patch(inverse, runtimeFinalizer.id(), runtimeFinalizer.getFiberRefs())
+                  FiberRefsPatch.patch(inverseRefs, runtimeFinalizer.id(), runtimeFinalizer.getFiberRefs())
                 )
               })
             )

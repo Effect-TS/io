@@ -5,7 +5,6 @@ import { constFalse, constTrue, dual, identity, pipe } from "@effect/data/Functi
 import * as Hash from "@effect/data/Hash"
 import * as HashSet from "@effect/data/HashSet"
 import { NodeInspectSymbol, toJSON } from "@effect/data/Inspectable"
-import * as MRef from "@effect/data/MutableRef"
 import * as Option from "@effect/data/Option"
 import { pipeArguments } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
@@ -13,6 +12,7 @@ import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type * as Cause from "@effect/io/Cause"
 import * as FiberId from "@effect/io/FiberId"
 import * as OpCodes from "@effect/io/internal/opCodes/cause"
+
 import type { ParentSpan, Span } from "@effect/io/Tracer"
 
 // -----------------------------------------------------------------------------
@@ -57,8 +57,6 @@ const proto = {
         return { _id: "Cause", _tag: this._tag, fiberId: this.fiberId.toJSON() }
       case "Fail":
         return { _id: "Cause", _tag: this._tag, failure: toJSON(this.error) }
-      case "Annotated":
-        return { _id: "Cause", _tag: this._tag, cause: this.cause.toJSON(), annotation: toJSON(this.annotation) }
       case "Sequential":
       case "Parallel":
         return { _id: "Cause", _tag: this._tag, errors: toJSON(prettyErrors(this)) }
@@ -108,15 +106,6 @@ export const interrupt = (fiberId: FiberId.FiberId): Cause.Cause<never> => {
 }
 
 /** @internal */
-export const annotated = <E>(cause: Cause.Cause<E>, annotation: unknown): Cause.Cause<E> => {
-  const o = Object.create(proto)
-  o._tag = OpCodes.OP_ANNOTATED
-  o.cause = cause
-  o.annotation = annotation
-  return o
-}
-
-/** @internal */
 export const parallel = <E, E2>(left: Cause.Cause<E>, right: Cause.Cause<E2>): Cause.Cause<E | E2> => {
   const o = Object.create(proto)
   o._tag = OpCodes.OP_PARALLEL
@@ -152,10 +141,6 @@ export const isDieType = <E>(self: Cause.Cause<E>): self is Cause.Die => self._t
 
 /** @internal */
 export const isInterruptType = <E>(self: Cause.Cause<E>): self is Cause.Interrupt => self._tag === OpCodes.OP_INTERRUPT
-
-/** @internal */
-export const isAnnotatedType = <E>(self: Cause.Cause<E>): self is Cause.Annotated<E> =>
-  self._tag === OpCodes.OP_ANNOTATED
 
 /** @internal */
 export const isSequentialType = <E>(self: Cause.Cause<E>): self is Cause.Sequential<E> =>
@@ -274,7 +259,6 @@ export const flipCauseOption = <E>(self: Cause.Cause<Option.Option<E>>): Option.
     onFail: (failureOption) => pipe(failureOption, Option.map(fail)),
     onDie: (defect) => Option.some(die(defect)),
     onInterrupt: (fiberId) => Option.some(interrupt(fiberId)),
-    onAnnotated: (causeOption, annotation) => pipe(causeOption, Option.map((cause) => annotated(cause, annotation))),
     onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
@@ -315,7 +299,6 @@ export const keepDefects = <E>(self: Cause.Cause<E>): Option.Option<Cause.Cause<
     onFail: () => Option.none(),
     onDie: (defect) => Option.some(die(defect)),
     onInterrupt: () => Option.none(),
-    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
     onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
@@ -349,7 +332,6 @@ export const keepDefectsAndElectFailures = <E>(self: Cause.Cause<E>): Option.Opt
     onFail: (failure) => Option.some(die(failure)),
     onDie: (defect) => Option.some(die(defect)),
     onInterrupt: () => Option.none(),
-    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
     onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
@@ -383,7 +365,6 @@ export const linearize = <E>(self: Cause.Cause<E>): HashSet.HashSet<Cause.Cause<
     onFail: (error) => HashSet.make(fail(error)),
     onDie: (defect) => HashSet.make(die(defect)),
     onInterrupt: (fiberId) => HashSet.make(interrupt(fiberId)),
-    onAnnotated: (set, annotation) => pipe(set, HashSet.map((cause) => annotated(cause, annotation))),
     onSequential: (leftSet, rightSet) =>
       pipe(
         leftSet,
@@ -413,7 +394,6 @@ export const stripFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
     onFail: () => empty,
     onDie: (defect) => die(defect),
     onInterrupt: (fiberId) => interrupt(fiberId),
-    onAnnotated: (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
     onSequential: sequential,
     onParallel: parallel
   })
@@ -425,7 +405,6 @@ export const electFailures = <E>(self: Cause.Cause<E>): Cause.Cause<never> =>
     onFail: (failure) => die(failure),
     onDie: (defect) => die(defect),
     onInterrupt: (fiberId) => interrupt(fiberId),
-    onAnnotated: (cause, annotation) => isEmptyType(cause) ? cause : annotated(cause, annotation),
     onSequential: (left, right) => sequential(left, right),
     onParallel: (left, right) => parallel(left, right)
   })
@@ -443,7 +422,6 @@ export const stripSomeDefects = dual<
       return Option.isSome(option) ? Option.none() : Option.some(die(defect))
     },
     onInterrupt: (fiberId) => Option.some(interrupt(fiberId)),
-    onAnnotated: (option, annotation) => pipe(option, Option.map((cause) => annotated(cause, annotation))),
     onSequential: (left, right) => {
       if (Option.isSome(left) && Option.isSome(right)) {
         return Option.some(sequential(left.value, right.value))
@@ -500,7 +478,6 @@ export const flatMap = dual<
     onFail: (error) => f(error),
     onDie: (defect) => die(defect),
     onInterrupt: (fiberId) => interrupt(fiberId),
-    onAnnotated: (cause, annotation) => annotated(cause, annotation),
     onSequential: (left, right) => sequential(left, right),
     onParallel: (left, right) => parallel(left, right)
   }))
@@ -675,10 +652,6 @@ export const find = dual<
             stack.push(item.left)
             break
           }
-          case OpCodes.OP_ANNOTATED: {
-            stack.push(item.cause)
-            break
-          }
         }
         break
       }
@@ -750,10 +723,6 @@ const evaluateCause = (
         cause = stack.pop()
         break
       }
-      case OpCodes.OP_ANNOTATED: {
-        cause = cause.cause
-        break
-      }
       case OpCodes.OP_SEQUENTIAL: {
         switch (cause.left._tag) {
           case OpCodes.OP_EMPTY: {
@@ -769,10 +738,6 @@ const evaluateCause = (
               sequential(cause.left.left, cause.right),
               sequential(cause.left.right, cause.right)
             )
-            break
-          }
-          case OpCodes.OP_ANNOTATED: {
-            cause = sequential(cause.left.cause, cause.right)
             break
           }
           default: {
@@ -803,7 +768,6 @@ const SizeCauseReducer: Cause.CauseReducer<unknown, unknown, number> = {
   failCase: () => 1,
   dieCase: () => 1,
   interruptCase: () => 1,
-  annotatedCase: (_, value) => value,
   sequentialCase: (_, left, right) => left + right,
   parallelCase: (_, left, right) => left + right
 }
@@ -814,7 +778,6 @@ const IsInterruptedOnlyCauseReducer: Cause.CauseReducer<unknown, unknown, boolea
   failCase: constFalse,
   dieCase: constFalse,
   interruptCase: constTrue,
-  annotatedCase: (_, value) => value,
   sequentialCase: (_, left, right) => left && right,
   parallelCase: (_, left, right) => left && right
 }
@@ -827,7 +790,6 @@ const FilterCauseReducer = <E>(
   failCase: (_, error) => fail(error),
   dieCase: (_, defect) => die(defect),
   interruptCase: (_, fiberId) => interrupt(fiberId),
-  annotatedCase: (_, cause, annotation) => annotated(cause, annotation),
   sequentialCase: (_, left, right) => {
     if (predicate(left)) {
       if (predicate(right)) {
@@ -855,13 +817,11 @@ const FilterCauseReducer = <E>(
 })
 
 /** @internal */
-type CauseCase = SequentialCase | ParallelCase | AnnotatedCase
+type CauseCase = SequentialCase | ParallelCase
 
 const OP_SEQUENTIAL_CASE = "SequentialCase"
 
 const OP_PARALLEL_CASE = "ParallelCase"
-
-const OP_ANNOTATED_CASE = "AnnotatedCase"
 
 /** @internal */
 interface SequentialCase {
@@ -874,12 +834,6 @@ interface ParallelCase {
 }
 
 /** @internal */
-interface AnnotatedCase {
-  readonly _tag: typeof OP_ANNOTATED_CASE
-  readonly annotation: unknown
-}
-
-/** @internal */
 export const match = dual<
   <Z, E>(
     options: {
@@ -887,7 +841,6 @@ export const match = dual<
       readonly onFail: (error: E) => Z
       readonly onDie: (defect: unknown) => Z
       readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
-      readonly onAnnotated: (value: Z, annotation: unknown) => Z
       readonly onSequential: (left: Z, right: Z) => Z
       readonly onParallel: (left: Z, right: Z) => Z
     }
@@ -899,18 +852,16 @@ export const match = dual<
       readonly onFail: (error: E) => Z
       readonly onDie: (defect: unknown) => Z
       readonly onInterrupt: (fiberId: FiberId.FiberId) => Z
-      readonly onAnnotated: (value: Z, annotation: unknown) => Z
       readonly onSequential: (left: Z, right: Z) => Z
       readonly onParallel: (left: Z, right: Z) => Z
     }
   ) => Z
->(2, (self, { onAnnotated, onDie, onEmpty, onFail, onInterrupt, onParallel, onSequential }) => {
+>(2, (self, { onDie, onEmpty, onFail, onInterrupt, onParallel, onSequential }) => {
   return reduceWithContext(self, void 0, {
     emptyCase: () => onEmpty,
     failCase: (_, error) => onFail(error),
     dieCase: (_, defect) => onDie(defect),
     interruptCase: (_, fiberId) => onInterrupt(fiberId),
-    annotatedCase: (_, value, annotation) => onAnnotated(value, annotation),
     sequentialCase: (_, left, right) => onSequential(left, right),
     parallelCase: (_, left, right) => onParallel(left, right)
   })
@@ -936,10 +887,6 @@ export const reduce = dual<
       case OpCodes.OP_PARALLEL: {
         causes.push(cause.right)
         cause = cause.left
-        break
-      }
-      case OpCodes.OP_ANNOTATED: {
-        cause = cause.cause
         break
       }
       default: {
@@ -980,11 +927,6 @@ export const reduceWithContext = dual<
         output.push(Either.right(reducer.interruptCase(context, cause.fiberId)))
         break
       }
-      case OpCodes.OP_ANNOTATED: {
-        input.push(cause.cause)
-        output.push(Either.left({ _tag: OP_ANNOTATED_CASE, annotation: cause.annotation }))
-        break
-      }
       case OpCodes.OP_SEQUENTIAL: {
         input.push(cause.right)
         input.push(cause.left)
@@ -1016,12 +958,6 @@ export const reduceWithContext = dual<
             const left = accumulator.pop()!
             const right = accumulator.pop()!
             const value = reducer.parallelCase(context, left, right)
-            accumulator.push(value)
-            break
-          }
-          case OP_ANNOTATED_CASE: {
-            const cause = accumulator.pop()!
-            const value = reducer.annotatedCase(context, cause, either.left.annotation)
             accumulator.push(value)
             break
           }
@@ -1144,43 +1080,6 @@ export const isInvalidCapacityError = (u: unknown): u is Cause.InvalidHubCapacit
 }
 
 // -----------------------------------------------------------------------------
-// Stack Annotations
-// -----------------------------------------------------------------------------
-
-/** @internal */
-export const SpanAnnotationTypeId: Cause.SpanAnnotationTypeId = Symbol.for(
-  "@effect/io/Cause/SpanAnnotation"
-) as Cause.SpanAnnotationTypeId
-
-/** @internal */
-export const isSpanAnnotation = (u: unknown): u is Cause.SpanAnnotation =>
-  typeof u === "object" && u !== null && SpanAnnotationTypeId in u
-
-/** @internal */
-export const makeSpanAnnotation = (span: Span): Cause.SpanAnnotation => ({
-  _tag: "SpanAnnotation",
-  [SpanAnnotationTypeId]: SpanAnnotationTypeId,
-  span
-})
-
-/** @internal */
-export const globalErrorSeq = MRef.make(0)
-
-/** @internal */
-const UnAnnotateCauseReducer = <E>(): Cause.CauseReducer<unknown, E, Cause.Cause<E>> => ({
-  emptyCase: () => empty,
-  failCase: (_, error) => fail(error),
-  dieCase: (_, defect) => die(defect),
-  interruptCase: (_, fiberId) => interrupt(fiberId),
-  annotatedCase: (_, cause, __) => cause,
-  sequentialCase: (_, left, right) => sequential(left, right),
-  parallelCase: (_, left, right) => parallel(left, right)
-})
-
-/** @internal */
-export const unannotate = <E>(self: Cause.Cause<E>) => reduceWithContext(self, void 0, UnAnnotateCauseReducer<E>())
-
-// -----------------------------------------------------------------------------
 // Pretty Printing
 // -----------------------------------------------------------------------------
 
@@ -1270,7 +1169,7 @@ export const prettyErrorMessage = (u: unknown): string => {
     typeof u["toString"] === "function" &&
     u["toString"] !== Object.prototype.toString
   ) {
-    return `Error: ${u["toString"]()}`
+    return u["toString"]()
   }
   // 3)
   if (typeof u === "object" && u !== null) {
@@ -1291,15 +1190,18 @@ export const prettyErrorMessage = (u: unknown): string => {
   return `Error: ${JSON.stringify(u)}`
 }
 
+const spanSymbol = Symbol.for("@effect/io/SpanAnnotation")
+
 const defaultRenderError = (error: unknown): PrettyError => {
-  if (error instanceof Error) {
+  const span = typeof error === "object" && error !== null && spanSymbol in error && (error as any)[spanSymbol]
+  if (typeof error === "object" && error !== null && error instanceof Error) {
     return new PrettyError(
       prettyErrorMessage(error),
       error.stack?.split("\n").filter((_) => !_.startsWith("Error")).join("\n"),
-      void 0
+      span
     )
   }
-  return new PrettyError(prettyErrorMessage(error), void 0, void 0)
+  return new PrettyError(prettyErrorMessage(error), void 0, span)
 }
 
 /** @internal */
@@ -1314,9 +1216,5 @@ export const prettyErrors = <E>(cause: Cause.Cause<E>): ReadonlyArray<PrettyErro
     },
     interruptCase: () => [],
     parallelCase: (_, l, r) => [...l, ...r],
-    sequentialCase: (_, l, r) => [...l, ...r],
-    annotatedCase: (_, renderErrors, annotation) =>
-      isSpanAnnotation(annotation) ?
-        renderErrors.map((error) => new PrettyError(error.message, error.stack, error.span ?? annotation.span)) :
-        renderErrors
+    sequentialCase: (_, l, r) => [...l, ...r]
   })

@@ -232,6 +232,6 @@ describe("Pool", () => {
       yield* $(Effect.repeatN(Pool.get(pool), 9))
       const fiber = yield* $(Effect.fork(Pool.get(pool)))
       const result = yield* $(Fiber.interrupt(fiber))
-      expect(Exit.unannotate(result)).toEqual(Exit.interrupt(fiberId))
+      expect(result).toEqual(Exit.interrupt(fiberId))
     }))
 })

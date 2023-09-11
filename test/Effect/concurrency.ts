@@ -323,11 +323,11 @@ describe.concurrent("Effect", () => {
   it.effect("timeout of failure", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.fail("uh oh"), Effect.timeout(Duration.hours(1)), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("uh oh"))
+      assert.deepStrictEqual(result, Exit.fail("uh oh"))
     }))
   it.effect("timeout of terminate", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.die(ExampleError), Effect.timeout(Duration.hours(1)), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
+      assert.deepStrictEqual(result, Exit.die(ExampleError))
     }))
 })

@@ -17,12 +17,6 @@ export type OP_FAILURE = typeof OP_FAILURE
 export const OP_FAILURE = "Failure" as const
 
 /** @internal */
-export type OP_FAILURE_WITH_ANNOTATION = typeof OP_FAILURE_WITH_ANNOTATION
-
-/** @internal */
-export const OP_FAILURE_WITH_ANNOTATION = "FailureWithAnnotation" as const
-
-/** @internal */
 export type OP_ON_FAILURE = typeof OP_ON_FAILURE
 
 /** @internal */

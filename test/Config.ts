@@ -33,8 +33,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&
@@ -52,8 +51,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&
@@ -73,8 +71,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&
@@ -104,8 +101,7 @@ describe.concurrent("Config", () => {
         const config = Config.option(Config.integer("key"))
         const configProvider = ConfigProvider.fromMap(new Map([["key", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&
@@ -123,8 +119,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&
@@ -144,8 +139,7 @@ describe.concurrent("Config", () => {
         )
         const configProvider = ConfigProvider.fromMap(new Map([["key2", "value"]]))
         const result = yield* $(
-          Effect.exit(configProvider.load(config)),
-          Effect.map(Exit.unannotate)
+          Effect.exit(configProvider.load(config))
         )
         assert.isTrue(
           Exit.isFailure(result) &&

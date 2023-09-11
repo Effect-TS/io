@@ -101,7 +101,7 @@ describe.concurrent("Fiber", () => {
     Effect.gen(function*($) {
       const fiberId = FiberId.make(0, 123)
       const result = yield* $(Fiber.interrupted(fiberId), Fiber.join, Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.interrupt(fiberId))
+      assert.deepStrictEqual(result, Exit.interrupt(fiberId))
     }))
   it.effect("scoped should create a new Fiber and scope it", () =>
     Effect.gen(function*($) {

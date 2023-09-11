@@ -194,7 +194,7 @@ describe.concurrent("ConfigProvider", () => {
       ])
       const result = yield* $(Effect.exit(provider(map).load(hostPortsConfig)))
       assert.deepStrictEqual(
-        Exit.unannotate(result),
+        result,
         Exit.fail(
           ConfigError.MissingData(
             ["hostPorts"],
@@ -353,8 +353,7 @@ describe.concurrent("ConfigProvider", () => {
         ["employees[1]", "4"]
       ])
       const result = yield* $(
-        Effect.exit(ConfigProvider.fromMap(map).load(config)),
-        Effect.map(Exit.unannotate)
+        Effect.exit(ConfigProvider.fromMap(map).load(config))
       )
       assert.isTrue(
         Exit.isFailure(result) &&
@@ -558,7 +557,7 @@ describe.concurrent("ConfigProvider", () => {
       )
       const result = yield* $(Effect.exit(provider(map).load(config)))
       assert.deepStrictEqual(
-        Exit.unannotate(result),
+        result,
         Exit.fail(
           ConfigError.MissingData(
             ["k1", "k2"],
@@ -852,7 +851,7 @@ describe.concurrent("ConfigProvider", () => {
         ["key"],
         "Expected nested to be in path in ConfigProvider#unnested"
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(error))
+      assert.deepStrictEqual(result, Exit.fail(error))
     }))
 
   it.effect("upperCase", () =>

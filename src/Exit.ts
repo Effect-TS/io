@@ -357,14 +357,6 @@ export const matchEffect: {
 export const succeed: <A>(value: A) => Exit<never, A> = core.exitSucceed
 
 /**
- * Removes any annotation from the failure cause
- *
- * @since 1.0.0
- * @category filtering
- */
-export const unannotate: <E, A>(exit: Exit<E, A>) => Exit<E, A> = core.exitUnannotate
-
-/**
  * Represents an `Exit` which succeeds with `undefined`.
  *
  * @since 1.0.0

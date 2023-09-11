@@ -23,12 +23,6 @@ export const OP_INTERRUPT = "Interrupt" as const
 export type OP_INTERRUPT = typeof OP_INTERRUPT
 
 /** @internal */
-export const OP_ANNOTATED = "Annotated" as const
-
-/** @internal */
-export type OP_ANNOTATED = typeof OP_ANNOTATED
-
-/** @internal */
 export const OP_PARALLEL = "Parallel" as const
 
 /** @internal */

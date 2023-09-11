@@ -60,7 +60,7 @@ describe.concurrent("Effect", () => {
   it.effect("tryMap - translates any thrown exceptions into typed failed effects", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.succeed("hello"), Effect.tryMap({ try: parseInt, catch: identity }), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Cause.IllegalArgumentException()))
+      assert.deepStrictEqual(result, Exit.fail(Cause.IllegalArgumentException()))
     }))
   it.effect("negate - on true returns false", () =>
     Effect.gen(function*($) {

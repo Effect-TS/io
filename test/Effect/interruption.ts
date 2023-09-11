@@ -455,7 +455,7 @@ describe.concurrent("Effect", () => {
         withLatch((release) => pipe(release, Effect.zipRight(Effect.fail("foo")), Effect.fork)),
         Effect.flatMap(Fiber.interrupt)
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("foo"))
+      assert.deepStrictEqual(result, Exit.fail("foo"))
     }))
   it.live("acquireRelease use inherits interrupt status", () =>
     Effect.gen(function*($) {

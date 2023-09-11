@@ -60,7 +60,7 @@ describe.concurrent("Effect", () => {
         }),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(error))
+      assert.deepStrictEqual(result, Exit.die(error))
     }))
   it.effect("suspendSucceed - must be evaluatable", () =>
     Effect.gen(function*($) {
@@ -75,8 +75,7 @@ describe.concurrent("Effect", () => {
           throw error
         }),
         Effect.sandbox,
-        Effect.either,
-        Effect.map(Either.mapLeft(Cause.unannotate))
+        Effect.either
       )
       assert.deepStrictEqual(result, Either.left(Cause.die(error)))
     }))

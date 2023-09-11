@@ -32,10 +32,7 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
-- [annotations](#annotations)
-  - [SpanAnnotation (interface)](#spanannotation-interface)
 - [constructors](#constructors)
-  - [annotated](#annotated)
   - [die](#die)
   - [empty](#empty)
   - [fail](#fail)
@@ -53,9 +50,9 @@ Added in v1.0.0
   - [InterruptedException](#interruptedexception)
   - [NoSuchElementException](#nosuchelementexception)
   - [RuntimeException](#runtimeexception)
+  - [originalError](#originalerror)
 - [filtering](#filtering)
   - [filter](#filter)
-  - [unannotate](#unannotate)
 - [folding](#folding)
   - [match](#match)
   - [reduce](#reduce)
@@ -98,7 +95,6 @@ Added in v1.0.0
   - [RuntimeException (interface)](#runtimeexception-interface)
   - [Sequential (interface)](#sequential-interface)
 - [refinements](#refinements)
-  - [isAnnotatedType](#isannotatedtype)
   - [isCause](#iscause)
   - [isDieType](#isdietype)
   - [isEmptyType](#isemptytype)
@@ -115,8 +111,6 @@ Added in v1.0.0
 - [sequencing](#sequencing)
   - [flatMap](#flatmap)
   - [flatten](#flatten)
-- [stack](#stack)
-  - [globalErrorSeq](#globalerrorseq)
 - [symbols](#symbols)
   - [CauseTypeId](#causetypeid)
   - [CauseTypeId (type alias)](#causetypeid-type-alias)
@@ -130,43 +124,13 @@ Added in v1.0.0
   - [NoSuchElementExceptionTypeId (type alias)](#nosuchelementexceptiontypeid-type-alias)
   - [RuntimeExceptionTypeId](#runtimeexceptiontypeid)
   - [RuntimeExceptionTypeId (type alias)](#runtimeexceptiontypeid-type-alias)
-  - [SpanAnnotationTypeId](#spanannotationtypeid)
-  - [SpanAnnotationTypeId (type alias)](#spanannotationtypeid-type-alias)
 - [utils](#utils)
   - [Cause (namespace)](#cause-namespace)
     - [Variance (interface)](#variance-interface)
 
 ---
 
-# annotations
-
-## SpanAnnotation (interface)
-
-**Signature**
-
-```ts
-export interface SpanAnnotation {
-  readonly _tag: 'SpanAnnotation'
-  readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
-  readonly span: Span
-}
-```
-
-Added in v1.0.0
-
 # constructors
-
-## annotated
-
-Constructs a new `Annotated` cause from the specified `annotation`.
-
-**Signature**
-
-```ts
-export declare const annotated: <E>(cause: Cause<E>, annotation: unknown) => Cause<E>
-```
-
-Added in v1.0.0
 
 ## die
 
@@ -360,6 +324,18 @@ export declare const RuntimeException: (message?: string | undefined) => Runtime
 
 Added in v1.0.0
 
+## originalError
+
+Returns the original, unproxied, instance of a thrown error
+
+**Signature**
+
+```ts
+export declare const originalError: <E>(obj: E) => E
+```
+
+Added in v1.0.0
+
 # filtering
 
 ## filter
@@ -373,18 +349,6 @@ export declare const filter: {
   <E>(predicate: Predicate<Cause<E>>): (self: Cause<E>) => Cause<E>
   <E>(self: Cause<E>, predicate: Predicate<Cause<E>>): Cause<E>
 }
-```
-
-Added in v1.0.0
-
-## unannotate
-
-Removes any annotation from the cause
-
-**Signature**
-
-```ts
-export declare const unannotate: <E>(cause: Cause<E>) => Cause<E>
 ```
 
 Added in v1.0.0
@@ -756,7 +720,7 @@ and parallel composition of errors in a fully lossless fashion.
 **Signature**
 
 ```ts
-export type Cause<E> = Empty | Fail<E> | Die | Interrupt | Annotated<E> | Sequential<E> | Parallel<E>
+export type Cause<E> = Empty | Fail<E> | Die | Interrupt | Sequential<E> | Parallel<E>
 ```
 
 Added in v1.0.0
@@ -774,7 +738,6 @@ export interface CauseReducer<C, E, Z> {
   readonly failCase: (context: C, error: E) => Z
   readonly dieCase: (context: C, defect: unknown) => Z
   readonly interruptCase: (context: C, fiberId: FiberId.FiberId) => Z
-  readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
   readonly sequentialCase: (context: C, left: Z, right: Z) => Z
   readonly parallelCase: (context: C, left: Z, right: Z) => Z
 }
@@ -976,19 +939,6 @@ Added in v1.0.0
 
 # refinements
 
-## isAnnotatedType
-
-Returns `true` if the specified `Cause` is an `Annotated` type, `false`
-otherwise.
-
-**Signature**
-
-```ts
-export declare const isAnnotatedType: <E>(self: Cause<E>) => self is Annotated<E>
-```
-
-Added in v1.0.0
-
 ## isCause
 
 Returns `true` if the specified value is a `Cause`, `false` otherwise.
@@ -1170,18 +1120,6 @@ export declare const flatten: <E>(self: Cause<Cause<E>>) => Cause<E>
 
 Added in v1.0.0
 
-# stack
-
-## globalErrorSeq
-
-**Signature**
-
-```ts
-export declare const globalErrorSeq: MutableRef<number>
-```
-
-Added in v1.0.0
-
 # symbols
 
 ## CauseTypeId
@@ -1300,26 +1238,6 @@ Added in v1.0.0
 
 ```ts
 export type RuntimeExceptionTypeId = typeof RuntimeExceptionTypeId
-```
-
-Added in v1.0.0
-
-## SpanAnnotationTypeId
-
-**Signature**
-
-```ts
-export declare const SpanAnnotationTypeId: typeof SpanAnnotationTypeId
-```
-
-Added in v1.0.0
-
-## SpanAnnotationTypeId (type alias)
-
-**Signature**
-
-```ts
-export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
 ```
 
 Added in v1.0.0
