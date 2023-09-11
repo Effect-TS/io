@@ -1,0 +1,112 @@
+import * as Chunk from "@effect/data/Chunk"
+import { equals } from "@effect/data/Equal"
+import { pipe } from "@effect/data/Function"
+import * as Cause from "@effect/io/Cause"
+import * as Effect from "@effect/io/Effect"
+import * as Exit from "@effect/io/Exit"
+import * as Ref from "@effect/io/Ref"
+import * as it from "@effect/io/test/utils/extend"
+import { describe, expect } from "bun:test"
+import assert from "node:assert"
+
+describe("Effect", () => {
+  it.effect("acquireUseRelease - happy path", () =>
+    Effect.gen(function*($) {
+      const release = yield* $(Ref.make(false))
+      const result = yield* $(
+        Effect.acquireUseRelease(
+          Effect.succeed(42),
+          (n) => Effect.succeed(n + 1),
+          () => Ref.set(release, true)
+        )
+      )
+      const released = yield* $(Ref.get(release))
+      assert.strictEqual(result, 43)
+      expect(released).toBeTrue()
+    }))
+  it.effect("acquireUseRelease - happy path + disconnect", () =>
+    Effect.gen(function*($) {
+      const release = yield* $(Ref.make(false))
+      const result = yield* $(
+        Effect.acquireUseRelease(
+          Effect.succeed(42),
+          (n) => Effect.succeed(n + 1),
+          () => Ref.set(release, true)
+        ),
+        Effect.disconnect
+      )
+      const released = yield* $(Ref.get(release))
+      assert.strictEqual(result, 43)
+      expect(released).toBeTrue()
+    }))
+  it.effect("acquireUseRelease - error handling", () =>
+    Effect.gen(function*($) {
+      const releaseDied = Cause.RuntimeException("release died")
+      const exit = yield* $(
+        Effect.acquireUseRelease(
+          Effect.succeed(42),
+          () => Effect.fail("use failed"),
+          () => Effect.die(releaseDied)
+        ),
+        Effect.exit
+      )
+      const result = yield* $(
+        exit,
+        Exit.matchEffect({ onFailure: Effect.succeed, onSuccess: () => Effect.fail("effect should have failed") })
+      )
+      expect(equals(Cause.failures(result), Chunk.of("use failed"))).toBeTrue()
+      expect(equals(Cause.defects(result), Chunk.of(releaseDied))).toBeTrue()
+    }))
+  it.effect("acquireUseRelease - error handling + disconnect", () =>
+    Effect.gen(function*($) {
+      const releaseDied = Cause.RuntimeException("release died")
+      const exit = yield* $(
+        Effect.acquireUseRelease(
+          Effect.succeed(42),
+          () => Effect.fail("use failed"),
+          () => Effect.die(releaseDied)
+        ),
+        Effect.disconnect,
+        Effect.exit
+      )
+      const result = yield* $(
+        exit,
+        Exit.matchEffect({
+          onFailure: Effect.succeed,
+          onSuccess: () => Effect.fail("effect should have failed")
+        })
+      )
+      expect(equals(Cause.failures(result), Chunk.of("use failed"))).toBeTrue()
+      expect(equals(Cause.defects(result), Chunk.of(releaseDied))).toBeTrue()
+    }))
+  it.effect("acquireUseRelease - beast mode error handling + disconnect", () =>
+    Effect.gen(function*($) {
+      const useDied = Cause.RuntimeException("use died")
+      const release = yield* $(Ref.make(false))
+      const exit = yield* $(
+        pipe(
+          Effect.acquireUseRelease(
+            Effect.succeed(42),
+            (): Effect.Effect<never, unknown, unknown> => {
+              throw useDied
+            },
+            () => Ref.set(release, true)
+          ),
+          Effect.disconnect,
+          Effect.exit
+        )
+      )
+      const result = yield* $(
+        pipe(
+          exit,
+          Exit.matchEffect({
+            onFailure: Effect.succeed,
+            onSuccess: () => Effect.fail("effect should have failed")
+          })
+        )
+      )
+      const released = yield* $(Ref.get(release))
+      expect(equals(Cause.defects(result), Chunk.of(useDied))).toBeTrue()
+      expect(released).toBeTrue()
+    }))
+})

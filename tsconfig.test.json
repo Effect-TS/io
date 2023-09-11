@@ -5,7 +5,8 @@
     "rootDir": "./",
     "noEmit": true,
     "types": [
-      "vitest/globals"
+      "node",
+      "bun-types"
     ]
   },
   "include": [

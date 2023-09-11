@@ -9,6 +9,7 @@ import * as Ref from "@effect/io/Ref"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
 import * as ObservableResource from "@effect/io/test/utils/cache/ObservableResource"
+import { expect } from "bun:test"
 
 export interface WatchableLookup<Key, Error, Value> {
   (key: Key): Effect.Effect<Scope.Scope, Error, Value>

@@ -1,5 +1,7 @@
+image:
+  file: .gitpod.Dockerfile
 tasks:
-  - init: npm install -g pnpm && pnpm install && pnpm build
+  - init: bun install && bun run build
 github:
   prebuilds:
     addCheck: true

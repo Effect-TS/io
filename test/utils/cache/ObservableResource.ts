@@ -3,7 +3,7 @@ import * as Effect from "@effect/io/Effect"
 import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import * as Ref from "@effect/io/Ref"
 import * as Scope from "@effect/io/Scope"
-import { expect } from "vitest"
+import { expect } from "bun:test"
 
 export interface ObservableResource<E, V> {
   readonly scoped: Effect.Effect<Scope.Scope, E, V>
@@ -20,22 +20,22 @@ class ObservableResourceImpl<E, V> implements ObservableResource<E, V> {
 
   assertNotAcquired(): Effect.Effect<never, never, void> {
     return Effect.map(this.getState, ([numAcquisition, numCleaned]) => {
-      expect(numAcquisition, "Resource acquired when it should not have").toBe(0)
-      expect(numCleaned, "Resource cleaned when it should not have").toBe(0)
+      expect(numAcquisition).toBe(0)
+      expect(numCleaned).toBe(0)
     })
   }
 
   assertAcquiredOnceAndCleaned(): Effect.Effect<never, never, void> {
     return Effect.map(this.getState, ([numAcquisition, numCleaned]) => {
-      expect(numAcquisition, "Resource not acquired once").toBe(1)
-      expect(numCleaned, "Resource not cleaned when it should have").toBe(1)
+      expect(numAcquisition).toBe(1)
+      expect(numCleaned).toBe(1)
     })
   }
 
   assertAcquiredOnceAndNotCleaned(): Effect.Effect<never, never, void> {
     return Effect.map(this.getState, ([numAcquisition, numCleaned]) => {
-      expect(numAcquisition, "Resource not acquired once").toBe(1)
-      expect(numCleaned, "Resource cleaned when it should not have").toBe(0)
+      expect(numAcquisition).toBe(1)
+      expect(numCleaned).toBe(0)
     })
   }
 }
