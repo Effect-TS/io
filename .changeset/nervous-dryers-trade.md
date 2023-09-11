@@ -2,4 +2,4 @@
 "@effect/io": patch
 ---
 
-Added `Scheduled` hotfix for Bun
+Added `Scheduler` hotfix for Bun
