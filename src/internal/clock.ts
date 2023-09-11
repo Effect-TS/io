@@ -28,12 +28,12 @@ export const globalClockScheduler: Clock.ClockScheduler = {
       return constFalse
     }
     let completed = false
-    const handle = setTimeout(() => {
+    const handle = core.setTimeout(() => {
       completed = true
       task()
     }, millis)
     return () => {
-      clearTimeout(handle)
+      core.clearTimeout(handle)
       return !completed
     }
   }

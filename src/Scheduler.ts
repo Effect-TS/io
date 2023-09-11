@@ -9,9 +9,6 @@ import type { RuntimeFiber } from "@effect/io/Fiber"
 import type { FiberRef } from "@effect/io/FiberRef"
 import * as core from "@effect/io/internal/core"
 
-/** @internal */
-const isBun = (process as any).isBun ?? false
-
 /**
  * @since 1.0.0
  * @category models
@@ -109,14 +106,7 @@ export class MixedScheduler implements Scheduler {
    */
   private starve(depth = 0) {
     if (depth >= this.maxNextTickBeforeTimer) {
-      if (isBun) {
-        const interval = setInterval(() => {
-          clearInterval(interval)
-          this.starveInternal(0)
-        }, 0)
-      } else {
-        setTimeout(() => this.starveInternal(0), 0)
-      }
+      core.setTimeout(() => this.starveInternal(0), 0)
     } else {
       Promise.resolve(void 0).then(() => this.starveInternal(depth + 1))
     }
@@ -346,14 +336,14 @@ export const makeBatched = (
  * @category constructors
  */
 export const timer = (ms: number, shouldYield: Scheduler["shouldYield"] = defaultShouldYield) =>
-  make((task) => setTimeout(task, ms), shouldYield)
+  make((task) => core.setTimeout(task, ms), shouldYield)
 
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const timerBatched = (ms: number, shouldYield: Scheduler["shouldYield"] = defaultShouldYield) =>
-  makeBatched((task) => setTimeout(task, ms), shouldYield)
+  makeBatched((task) => core.setTimeout(task, ms), shouldYield)
 
 /** @internal */
 export const currentScheduler: FiberRef<Scheduler> = globalValue(

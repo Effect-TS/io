@@ -1,5 +1,6 @@
 import * as Either from "@effect/data/Either"
 import * as Effect from "@effect/io/Effect"
+import { setTimeout } from "@effect/io/test/utils/timeout"
 
 describe.concurrent("Effect", () => {
   it("tryPromise - success, no catch, no AbortSignal", async () => {

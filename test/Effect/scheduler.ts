@@ -1,6 +1,7 @@
 import * as Effect from "@effect/io/Effect"
 import * as Scheduler from "@effect/io/Scheduler"
 import * as it from "@effect/io/test/utils/extend"
+import { setTimeout } from "@effect/io/test/utils/timeout"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Effect", () => {
