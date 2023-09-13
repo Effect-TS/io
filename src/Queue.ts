@@ -506,7 +506,7 @@ export const unsafeOffer: {
  * @category utils
  */
 export const offerAll: {
-  <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(iterable: Iterable<A>): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
   <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 } = internal.offerAll
 
