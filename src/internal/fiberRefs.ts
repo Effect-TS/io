@@ -18,6 +18,11 @@ export function unsafeMake(
 }
 
 /** @internal */
+export function empty(): FiberRefs.FiberRefs {
+  return unsafeMake(new Map())
+}
+
+/** @internal */
 export const FiberRefsSym: FiberRefs.FiberRefsSym = Symbol.for("@effect/io/FiberRefs") as FiberRefs.FiberRefsSym
 
 /** @internal */

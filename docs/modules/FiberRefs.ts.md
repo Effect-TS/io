@@ -12,6 +12,8 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [constructors](#constructors)
+  - [empty](#empty)
 - [getters](#getters)
   - [fiberRefs](#fiberrefs)
   - [get](#get)
@@ -31,6 +33,20 @@ Added in v1.0.0
   - [updatedAs](#updatedas)
 
 ---
+
+# constructors
+
+## empty
+
+The empty collection of `FiberRef` values.
+
+**Signature**
+
+```ts
+export declare const empty: () => FiberRefs
+```
+
+Added in v1.0.0
 
 # getters
 

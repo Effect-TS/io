@@ -150,3 +150,11 @@ export const updatedAs: {
 export const unsafeMake: (
   fiberRefLocals: Map<FiberRef.FiberRef<any>, Arr.NonEmptyReadonlyArray<readonly [FiberId.Runtime, any]>>
 ) => FiberRefs = internal.unsafeMake
+
+/**
+ * The empty collection of `FiberRef` values.
+ *
+ * @category constructors
+ * @since 1.0.0
+ */
+export const empty: () => FiberRefs = internal.empty
