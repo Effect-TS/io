@@ -84,18 +84,21 @@ describe.concurrent("Effect", () => {
 
   it.effect("serviceFunctions - expose service functions", () => {
     interface Service {
-      foo: (x: string, y: number) => Effect.Effect<never, never, string>
+      readonly foo: (x: string, y: number) => Effect.Effect<never, string, string>
+      readonly bar: (x: string, y: number) => string
     }
     const Service = Context.Tag<Service>()
-    const { foo } = Effect.serviceFunctions(Service)
+    const { bar, foo } = Effect.serviceFunctions(Service)
     return pipe(
       Effect.gen(function*(_) {
         expect(yield* _(foo("a", 3))).toEqual("a3")
+        expect(yield* _(bar("a", 3))).toEqual("a3")
       }),
       Effect.provideService(
         Service,
         Service.of({
-          foo: (x, y) => Effect.succeed(`${x}${y}`)
+          foo: (x, y) => Effect.succeed(`${x}${y}`),
+          bar: (x, y) => `${x}${y}`
         })
       )
     )
@@ -103,17 +106,19 @@ describe.concurrent("Effect", () => {
 
   it.effect("serviceConstants - expose service constants", () => {
     interface Service {
-      baz: string
+      readonly baz: string
+      readonly foo: (x: string, y: number) => Effect.Effect<never, string, string>
     }
     const Service = Context.Tag<Service>()
-    const { baz } = Effect.serviceConstants(Service)
+    const { baz, foo } = Effect.serviceConstants(Service)
     return pipe(
       Effect.gen(function*(_) {
         expect(yield* _(baz)).toEqual("42!")
+        expect(yield* _(foo, Effect.flatMap((f) => f("a", 3)))).toEqual("a3")
       }),
       Effect.provideService(
         Service,
-        Service.of({ baz: "42!" })
+        Service.of({ baz: "42!", foo: (x, y) => Effect.succeed(`${x}${y}`) })
       )
     )
   })

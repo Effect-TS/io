@@ -3188,26 +3188,19 @@ export const serviceFunctionEffect: <T extends Context.Tag<any, any>, Args exten
 export const serviceFunctions: <I, S>(
   tag: Context.Tag<I, S>
 ) => {
-  [k in { [k in keyof S]: S[k] extends (...args: Array<any>) => Effect<any, any, any> ? k : never }[keyof S]]:
-    S[k] extends (...args: infer Args) => Effect<infer R, infer E, infer A> ? (...args: Args) => Effect<R | I, E, A> :
-      never
+  [K in { [K in keyof S]: S[K] extends (...args: Array<any>) => any ? K : never }[keyof S]]: [S[K]] extends
+    [(...args: infer Args) => infer R]
+    ? R extends Effect<infer R, infer E, infer A> ? (...args: Args) => Effect<I | R, E, A>
+    : (...args: Args) => Effect<I, never, R>
+    : never
 } = effect.serviceFunctions
 
 /**
  * @since 1.0.0
  * @category context
  */
-export const serviceConstants: <I, S>(
-  tag: Context.Tag<I, S>
-) => {
-  [
-    k in {
-      [k in keyof S]: S[k] extends Effect<any, any, any> ? never
-        : S[k] extends (...args: any) => Effect<any, any, any> ? never
-        : k
-    }[keyof S]
-  ]: Effect<I, never, S[k]>
-} = effect.serviceConstants
+export const serviceConstants: <I, S>(tag: Context.Tag<I, S>) => { [K in keyof S]: Effect<I, never, S[K]> } =
+  effect.serviceConstants
 
 /**
  * @since 1.0.0
