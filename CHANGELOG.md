@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.40.3
+
+### Patch Changes
+
+- [#666](https://github.com/Effect-TS/io/pull/666) [`acb1bd2`](https://github.com/Effect-TS/io/commit/acb1bd28b7977851e5b5ec49d902a9ad5b5472a0) Thanks [@gcanti](https://github.com/gcanti)! - Hub: fix publishAll behaviour
+
 ## 0.40.2
 
 ### Patch Changes
