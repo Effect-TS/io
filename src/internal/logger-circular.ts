@@ -17,7 +17,7 @@ export const test = dual<
     logLevel: core.logLevelInfo,
     message: input,
     cause: Cause.empty,
-    context: fiberRefs.unsafeMake(new Map()),
+    context: fiberRefs.empty(),
     spans: List.empty(),
     annotations: HashMap.empty(),
     date: new Date()

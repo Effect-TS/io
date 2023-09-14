@@ -299,7 +299,7 @@ export const defaultRuntimeFlags: RuntimeFlags.RuntimeFlags = runtimeFlags.make(
 export const defaultRuntime = make({
   context: Context.empty(),
   runtimeFlags: defaultRuntimeFlags,
-  fiberRefs: FiberRefs.unsafeMake(new Map())
+  fiberRefs: FiberRefs.empty()
 })
 
 /** @internal */
