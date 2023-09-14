@@ -1,5 +1,13 @@
 # @effect/io
 
+## 0.40.2
+
+### Patch Changes
+
+- [#664](https://github.com/Effect-TS/io/pull/664) [`929d7e4`](https://github.com/Effect-TS/io/commit/929d7e46e523558507760e3123b2d9557c3ceaaa) Thanks [@gcanti](https://github.com/gcanti)! - FiberRefs: add empty constructor
+
+- [#665](https://github.com/Effect-TS/io/pull/665) [`9d3600d`](https://github.com/Effect-TS/io/commit/9d3600deabd9c755cf9998344c567522dbf4f8d4) Thanks [@TylorS](https://github.com/TylorS)! - Fix curried signature for Queue.offerAll
+
 ## 0.40.1
 
 ### Patch Changes
