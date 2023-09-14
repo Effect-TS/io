@@ -681,7 +681,7 @@ queue but if there is no room it will not enqueue them and return false.
 
 ```ts
 export declare const offerAll: {
-  <A>(iterable: Iterable<A>): (self: Enqueue<A>) => (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
+  <A>(iterable: Iterable<A>): (self: Enqueue<A>) => Effect.Effect<never, never, boolean>
   <A>(self: Enqueue<A>, iterable: Iterable<A>): Effect.Effect<never, never, boolean>
 }
 ```
