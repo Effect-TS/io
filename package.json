@@ -1,6 +1,6 @@
 {
   "name": "@effect/io",
-  "version": "0.40.2",
+  "version": "0.40.3",
   "publishConfig": {
     "access": "public",
     "directory": "dist"
