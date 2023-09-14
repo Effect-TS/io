@@ -455,7 +455,7 @@ export const unsafeOffer = dual<
 export const offerAll = dual<
   <A>(
     iterable: Iterable<A>
-  ) => (self: Queue.Enqueue<A>) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>,
+  ) => (self: Queue.Enqueue<A>) => Effect.Effect<never, never, boolean>,
   <A>(
     self: Queue.Enqueue<A>,
     iterable: Iterable<A>
