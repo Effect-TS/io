@@ -241,13 +241,13 @@ class BoundedHubArb<A> implements AtomicHub<A> {
     let iteratorIndex = 0
     const publishAllIndex = this.publisherIndex + forHub
     while (this.publisherIndex !== publishAllIndex) {
-      const a = pipe(chunk, Chunk.unsafeGet(iteratorIndex++))
+      const a = Chunk.unsafeGet(chunk, iteratorIndex++)
       const index = this.publisherIndex % this.capacity
       this.array[index] = a
       this.subscribers[index] = this.subscriberCount
       this.publisherIndex += 1
     }
-    return pipe(chunk, Chunk.drop(iteratorIndex - 1))
+    return Chunk.drop(chunk, iteratorIndex)
   }
 
   slide(): void {
@@ -407,13 +407,13 @@ class BoundedHubPow2<A> implements AtomicHub<A> {
     let iteratorIndex = 0
     const publishAllIndex = this.publisherIndex + forHub
     while (this.publisherIndex !== publishAllIndex) {
-      const elem = pipe(chunk, Chunk.unsafeGet(iteratorIndex++))
+      const elem = Chunk.unsafeGet(chunk, iteratorIndex++)
       const index = this.publisherIndex & this.mask
       this.array[index] = elem
       this.subscribers[index] = this.subscriberCount
       this.publisherIndex += 1
     }
-    return pipe(chunk, Chunk.drop(iteratorIndex - 1))
+    return Chunk.drop(chunk, iteratorIndex)
   }
 
   slide(): void {
@@ -561,7 +561,7 @@ class BoundedHubSingle<A> implements AtomicHub<A> {
       return chunk
     }
     if (this.publish(Chunk.unsafeHead(chunk))) {
-      return pipe(chunk, Chunk.drop(1))
+      return Chunk.drop(chunk, 1)
     } else {
       return chunk
     }

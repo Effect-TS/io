@@ -9,6 +9,60 @@ import * as it from "@effect/io/test/utils/extend"
 import { assert, describe } from "vitest"
 
 describe.concurrent("Hub", () => {
+  it.effect("publishAll - capacity 2 (BoundedHubPow2)", () => {
+    const messages = [1, 2]
+    return Hub.bounded<number>(2).pipe(
+      Effect.flatMap((hub) =>
+        Effect.scoped(
+          Effect.gen(function*(_) {
+            const dequeue1 = yield* _(Hub.subscribe(hub))
+            const dequeue2 = yield* _(Hub.subscribe(hub))
+            yield* _(Hub.publishAll(hub, messages))
+            const takes1 = yield* _(Queue.takeAll(dequeue1))
+            const takes2 = yield* _(Queue.takeAll(dequeue2))
+            assert.deepStrictEqual([...takes1], messages)
+            assert.deepStrictEqual([...takes2], messages)
+          })
+        )
+      )
+    )
+  })
+  it.effect("publishAll - capacity 4 (BoundedHubPow2)", () => {
+    const messages = [1, 2]
+    return Hub.bounded<number>(4).pipe(
+      Effect.flatMap((hub) =>
+        Effect.scoped(
+          Effect.gen(function*(_) {
+            const dequeue1 = yield* _(Hub.subscribe(hub))
+            const dequeue2 = yield* _(Hub.subscribe(hub))
+            yield* _(Hub.publishAll(hub, messages))
+            const takes1 = yield* _(Queue.takeAll(dequeue1))
+            const takes2 = yield* _(Queue.takeAll(dequeue2))
+            assert.deepStrictEqual([...takes1], messages)
+            assert.deepStrictEqual([...takes2], messages)
+          })
+        )
+      )
+    )
+  })
+  it.effect("publishAll - capacity 3 (BoundedHubArb)", () => {
+    const messages = [1, 2]
+    return Hub.bounded<number>(3).pipe(
+      Effect.flatMap((hub) =>
+        Effect.scoped(
+          Effect.gen(function*(_) {
+            const dequeue1 = yield* _(Hub.subscribe(hub))
+            const dequeue2 = yield* _(Hub.subscribe(hub))
+            yield* _(Hub.publishAll(hub, messages))
+            const takes1 = yield* _(Queue.takeAll(dequeue1))
+            const takes2 = yield* _(Queue.takeAll(dequeue2))
+            assert.deepStrictEqual([...takes1], messages)
+            assert.deepStrictEqual([...takes2], messages)
+          })
+        )
+      )
+    )
+  })
   it.effect("sequential publishers and subscribers with one publisher and one subscriber", () =>
     Effect.gen(function*($) {
       const values = ReadonlyArray.range(0, 9)
