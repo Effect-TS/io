@@ -8,6 +8,7 @@ import * as Exit from "@effect/io/Exit"
 import * as Fiber from "@effect/io/Fiber"
 import * as FiberRef from "@effect/io/FiberRef"
 import * as TestClock from "@effect/io/internal/testing/testClock"
+import * as timeout from "@effect/io/internal/timeout"
 import * as Layer from "@effect/io/Layer"
 import * as Request from "@effect/io/Request"
 import * as Resolver from "@effect/io/RequestResolver"
@@ -49,7 +50,7 @@ export const GetNameById = Request.tagged<GetNameById>("GetNameById")
 
 const delay = <R, E, A>(self: Effect.Effect<R, E, A>) =>
   Effect.zipRight(
-    Effect.promise(() => new Promise((r) => setTimeout(() => r(0), 0))),
+    Effect.promise(() => new Promise((r) => timeout.set(() => r(0), 0))),
     self
   )
 

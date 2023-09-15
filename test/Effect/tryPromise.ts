@@ -1,11 +1,12 @@
 import * as Either from "@effect/data/Either"
 import * as Effect from "@effect/io/Effect"
+import * as timeout from "@effect/io/internal/timeout"
 
 describe.concurrent("Effect", () => {
   it("tryPromise - success, no catch, no AbortSignal", async () => {
     const effect = Effect.tryPromise<number>(() =>
       new Promise((resolve) => {
-        setTimeout(() => {
+        timeout.set(() => {
           resolve(1)
         }, 100)
       })
@@ -17,7 +18,7 @@ describe.concurrent("Effect", () => {
   it("tryPromise - failure, no catch, no AbortSignal", async () => {
     const effect = Effect.tryPromise<void>(() =>
       new Promise((_resolve, reject) => {
-        setTimeout(() => {
+        timeout.set(() => {
           reject("error")
         }, 100)
       })
@@ -30,7 +31,7 @@ describe.concurrent("Effect", () => {
     const effect = Effect.tryPromise({
       try: () =>
         new Promise((_resolve, reject) => {
-          setTimeout(() => {
+          timeout.set(() => {
             reject("error")
           }, 100)
         }),
@@ -47,7 +48,7 @@ describe.concurrent("Effect", () => {
         aborted = true
       })
       return new Promise((resolve) => {
-        setTimeout(() => {
+        timeout.set(() => {
           resolve()
         }, 100)
       })
@@ -68,7 +69,7 @@ describe.concurrent("Effect", () => {
           aborted = true
         })
         return new Promise((resolve) => {
-          setTimeout(() => {
+          timeout.set(() => {
             resolve()
           }, 100)
         })
