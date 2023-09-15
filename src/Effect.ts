@@ -906,11 +906,11 @@ export const validateAll: {
  *
  * const f = (n: number) => (n > 0 ? Effect.succeed(n) : Effect.fail(`${n} is negative`))
  *
- * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([], f))), Exit.fail([]))
- * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, 2], f))), Exit.succeed(1))
- * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, -1], f))), Exit.succeed(1))
- * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, 2], f))), Exit.succeed(2))
- * assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, -2], f))), Exit.fail(['-1 is negative', '-2 is negative']))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([], f)), Exit.fail([]))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, 2], f)), Exit.succeed(1))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, -1], f)), Exit.succeed(1))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, 2], f)), Exit.succeed(2))
+ * assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, -2], f)), Exit.fail(['-1 is negative', '-2 is negative']))
  *
  * @since 1.0.0
  * @category collecting & elements
@@ -1036,14 +1036,6 @@ export const failCause: <E>(cause: Cause.Cause<E>) => Effect<never, E, never> = 
  * @category constructors
  */
 export const failCauseSync: <E>(evaluate: LazyArg<Cause.Cause<E>>) => Effect<never, E, never> = core.failCauseSync
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const failCauseAnnotate: <E>(
-  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
-) => Effect<never, E, never> = core.failCauseAnnotate
 
 /**
  * @since 1.0.0

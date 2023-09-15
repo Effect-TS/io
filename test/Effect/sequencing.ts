@@ -75,7 +75,7 @@ describe.concurrent("Effect", () => {
         Effect.exit
       )
       const effect = yield* $(Ref.get(ref))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+      assert.deepStrictEqual(result, Exit.fail("fail"))
       assert.isFalse(effect)
     }))
   it.effect("unless - executes correct branch only", () =>
@@ -226,7 +226,7 @@ describe.concurrent("Effect", () => {
       const leftResult = yield* $(Fiber.await(leftInnerFiber))
       const interrupted = yield* $(Ref.get(ref))
       assert.isFalse(interrupted)
-      assert.deepStrictEqual(Exit.unannotate(leftResult), Exit.succeed("foo"))
+      assert.deepStrictEqual(leftResult, Exit.succeed("foo"))
       assert.strictEqual(rightResult, 42)
     }))
 })

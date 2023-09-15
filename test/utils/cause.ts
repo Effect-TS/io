@@ -17,12 +17,6 @@ export const causesArb = <E>(
   const die = defect.map(Cause.die)
   const interrupt = fiberId.map(Cause.interrupt)
 
-  const annotated = (n: number): fc.Arbitrary<Cause.Cause<E>> => {
-    return fc.tuple(causesN(n - 1), fc.anything()).map(
-      ([cause, annotation]) => Cause.annotated(cause, annotation)
-    )
-  }
-
   const sequential = (n: number): fc.Arbitrary<Cause.Cause<E>> => {
     return fc.integer({ min: 1, max: n - 1 }).chain((i) =>
       causesN(i).chain((left) => causesN(n - i).map((right) => Cause.sequential(left, right)))
@@ -39,10 +33,7 @@ export const causesArb = <E>(
     if (n === 1) {
       return fc.oneof(empty, failure, die, interrupt)
     }
-    if (n === 2) {
-      return annotated(n)
-    }
-    return fc.oneof(annotated(n), sequential(n), parallel(n))
+    return fc.oneof(sequential(n), parallel(n))
   }
 
   return causesN(n)

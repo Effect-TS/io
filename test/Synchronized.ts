@@ -51,7 +51,7 @@ describe.concurrent("SynchronizedRef", () => {
     Effect.gen(function*($) {
       const ref = yield* $(Synchronized.make(current))
       const result = yield* $(Synchronized.getAndUpdateEffect(ref, (_) => Effect.fail(failure)), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
+      assert.deepStrictEqual(result, Exit.fail(failure))
     }))
   it.effect("getAndUpdateSomeEffect - happy path", () =>
     Effect.gen(function*($) {
@@ -92,7 +92,7 @@ describe.concurrent("SynchronizedRef", () => {
             Option.none()),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(failure))
+      assert.deepStrictEqual(result, Exit.fail(failure))
     }))
   it.effect("getAndUpdateSomeEffect - interrupt parent fiber and update", () =>
     Effect.gen(function*($) {

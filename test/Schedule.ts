@@ -706,7 +706,7 @@ describe.concurrent("Schedule", () => {
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: secondOfMinute(60). Must be in range 0...59"
         )
-        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
+        assert.deepStrictEqual(exit, Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `minute` argument of `minuteOfHour`", () =>
       Effect.gen(function*($) {
@@ -715,14 +715,14 @@ describe.concurrent("Schedule", () => {
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: minuteOfHour(60). Must be in range 0...59"
         )
-        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
+        assert.deepStrictEqual(exit, Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `hour` argument of `hourOfDay`", () =>
       Effect.gen(function*($) {
         const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.hourOfDay(24), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: hourOfDay(24). Must be in range 0...23")
-        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
+        assert.deepStrictEqual(exit, Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfWeek`", () =>
       Effect.gen(function*($) {
@@ -731,14 +731,14 @@ describe.concurrent("Schedule", () => {
         const exception = Cause.IllegalArgumentException(
           "Invalid argument in: dayOfWeek(8). Must be in range 1 (Monday)...7 (Sunday)"
         )
-        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
+        assert.deepStrictEqual(exit, Exit.die(exception))
       }))
     it.effect("throw IllegalArgumentException on invalid `day` argument of `dayOfMonth`", () =>
       Effect.gen(function*($) {
         const input = Chunk.of(Date.now())
         const exit = yield* $(Effect.exit(runCollect(Schedule.dayOfMonth(32), input)))
         const exception = Cause.IllegalArgumentException("Invalid argument in: dayOfMonth(32). Must be in range 1...31")
-        assert.deepStrictEqual(Exit.unannotate(exit), Exit.die(exception))
+        assert.deepStrictEqual(exit, Exit.die(exception))
       }))
   })
 })

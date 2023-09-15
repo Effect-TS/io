@@ -70,7 +70,6 @@ Added in v1.0.0
   - [dieSync](#diesync)
   - [fail](#fail)
   - [failCause](#failcause)
-  - [failCauseAnnotate](#failcauseannotate)
   - [failCauseSync](#failcausesync)
   - [failSync](#failsync)
   - [gen](#gen)
@@ -1123,12 +1122,12 @@ import * as Exit from '@effect/io/Exit'
 
 const f = (n: number) => (n > 0 ? Effect.succeed(n) : Effect.fail(`${n} is negative`))
 
-assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([], f))), Exit.fail([]))
-assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, 2], f))), Exit.succeed(1))
-assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([1, -1], f))), Exit.succeed(1))
-assert.deepStrictEqual(Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, 2], f))), Exit.succeed(2))
+assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([], f)), Exit.fail([]))
+assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, 2], f)), Exit.succeed(1))
+assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([1, -1], f)), Exit.succeed(1))
+assert.deepStrictEqual(Effect.runSyncExit(Effect.validateFirst([-1, 2], f)), Exit.succeed(2))
 assert.deepStrictEqual(
-  Exit.unannotate(Effect.runSyncExit(Effect.validateFirst([-1, -2], f))),
+  Effect.runSyncExit(Effect.validateFirst([-1, -2], f)),
   Exit.fail(['-1 is negative', '-2 is negative'])
 )
 ```
@@ -1350,18 +1349,6 @@ Added in v1.0.0
 
 ```ts
 export declare const failCause: <E>(cause: Cause.Cause<E>) => Effect<never, E, never>
-```
-
-Added in v1.0.0
-
-## failCauseAnnotate
-
-**Signature**
-
-```ts
-export declare const failCauseAnnotate: <E>(
-  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
-) => Effect<never, E, never>
 ```
 
 Added in v1.0.0

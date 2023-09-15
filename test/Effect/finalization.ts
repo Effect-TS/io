@@ -37,7 +37,7 @@ describe.concurrent("Effect", () => {
         })),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
+      assert.deepStrictEqual(result, Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
   it.effect("fail on error", () =>
@@ -52,7 +52,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
+      assert.deepStrictEqual(result, Exit.fail(ExampleError))
       assert.isTrue(finalized)
     }))
   it.effect("finalizer errors not caught", () =>
@@ -70,7 +70,7 @@ describe.concurrent("Effect", () => {
         )
       )
       const expected = Cause.sequential(Cause.sequential(Cause.fail(ExampleError), Cause.die(e2)), Cause.die(e3))
-      assert.deepStrictEqual(Cause.unannotate(result), expected)
+      assert.deepStrictEqual(result, expected)
     }))
   it.effect("finalizer errors reported", () =>
     Effect.gen(function*($) {
@@ -116,7 +116,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
+      assert.deepStrictEqual(result, Exit.fail(ExampleError))
     }))
   it.effect("error in just release", () =>
     Effect.gen(function*($) {
@@ -130,7 +130,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
+      assert.deepStrictEqual(result, Exit.die(ExampleError))
     }))
   it.effect("error in just usage", () =>
     Effect.gen(function*($) {
@@ -144,7 +144,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(ExampleError))
+      assert.deepStrictEqual(result, Exit.fail(ExampleError))
     }))
   it.effect("rethrown caught error in acquisition", () =>
     Effect.gen(function*($) {
@@ -172,7 +172,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
+      assert.deepStrictEqual(result, Exit.die(ExampleError))
     }))
   it.effect("rethrown caught error in usage", () =>
     Effect.gen(function*($) {
@@ -184,7 +184,7 @@ describe.concurrent("Effect", () => {
         ),
         Effect.exit
       )
-      assert.deepEqual(Exit.unannotate(result), Exit.fail(ExampleError))
+      assert.deepEqual(result, Exit.fail(ExampleError))
     }))
   it.effect("test eval of async fail", () =>
     Effect.gen(function*($) {
@@ -202,10 +202,10 @@ describe.concurrent("Effect", () => {
       const a2 = yield* $(Effect.exit(io2))
       const a3 = yield* $(io1, Effect.exit)
       const a4 = yield* $(io2, Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(a1), Exit.fail(ExampleError))
-      assert.deepStrictEqual(Exit.unannotate(a2), Exit.fail(ExampleError))
-      assert.deepStrictEqual(Exit.unannotate(a3), Exit.fail(ExampleError))
-      assert.deepStrictEqual(Exit.unannotate(a4), Exit.fail(ExampleError))
+      assert.deepStrictEqual(a1, Exit.fail(ExampleError))
+      assert.deepStrictEqual(a2, Exit.fail(ExampleError))
+      assert.deepStrictEqual(a3, Exit.fail(ExampleError))
+      assert.deepStrictEqual(a4, Exit.fail(ExampleError))
     }))
   it.live("acquireUseRelease regression 1", () =>
     Effect.gen(function*($) {

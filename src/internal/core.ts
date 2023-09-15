@@ -108,7 +108,6 @@ export type Primitive =
   | Async
   | Commit
   | Failure
-  | FailureWithAnnotation
   | OnFailure
   | OnSuccess
   | OnStep
@@ -287,13 +286,6 @@ export interface RunBlocked<R = any> extends
 export interface Failure extends
   Op<OpCodes.OP_FAILURE, {
     readonly i0: Cause.Cause<unknown>
-  }>
-{}
-
-/** @internal */
-export interface FailureWithAnnotation extends
-  Op<OpCodes.OP_FAILURE_WITH_ANNOTATION, {
-    readonly i0: (annotate: <E>(cause: Cause.Cause<E>) => Cause.Cause<E>) => Cause.Cause<unknown>
   }>
 {}
 
@@ -607,9 +599,48 @@ export const checkInterruptible = <R, E, A>(
 ): Effect.Effect<R, E, A> =>
   withFiberRuntime<R, E, A>((_, status) => f(_runtimeFlags.interruption(status.runtimeFlags)))
 
+const spanSymbol = Symbol.for("@effect/io/SpanAnnotation")
+const originalSymbol = Symbol.for("@effect/io/OriginalAnnotation")
+
+/* @internal */
+export const originalInstance = <E>(obj: E): E => {
+  if (typeof obj === "object" && obj !== null && originalSymbol in obj) {
+    // @ts-expect-error
+    return obj[originalSymbol]
+  }
+  return obj
+}
+
+/* @internal */
+const capture = <E>(obj: E & object, span: List.List<Tracer.ParentSpan>): E => {
+  if (List.isCons(span)) {
+    const head = span.head
+    if (head._tag === "Span") {
+      return new Proxy(obj, {
+        has(target, p) {
+          return p === spanSymbol || p === originalSymbol || p in target
+        },
+        get(target, p) {
+          if (p === spanSymbol) {
+            return head
+          }
+          if (p === originalSymbol) {
+            return obj
+          }
+          // @ts-expect-error
+          return target[p]
+        }
+      })
+    }
+  }
+  return obj
+}
+
 /* @internal */
 export const die = (defect: unknown): Effect.Effect<never, never, never> =>
-  failCauseAnnotate((annotate) => annotate(internalCause.die(defect)))
+  typeof defect === "object" && defect !== null && !(spanSymbol in defect) ?
+    withFiberRuntime((fiber) => failCause(internalCause.die(capture(defect, fiber.getFiberRef(currentTracerSpan)))))
+    : failCause(internalCause.die(defect))
 
 /* @internal */
 export const dieMessage = (message: string): Effect.Effect<never, never, never> =>
@@ -643,7 +674,9 @@ export const exit = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, ne
 
 /* @internal */
 export const fail = <E>(error: E): Effect.Effect<never, E, never> =>
-  failCauseAnnotate((annotate) => annotate(internalCause.fail(error)))
+  typeof error === "object" && error !== null && !(spanSymbol in error) ?
+    withFiberRuntime((fiber) => failCause(internalCause.fail(capture(error, fiber.getFiberRef(currentTracerSpan)))))
+    : failCause(internalCause.fail(error))
 
 /* @internal */
 export const failSync = <E>(evaluate: LazyArg<E>): Effect.Effect<never, E, never> => flatMap(sync(evaluate), fail)
@@ -659,15 +692,6 @@ export const failCause = <E>(cause: Cause.Cause<E>): Effect.Effect<never, E, nev
 export const failCauseSync = <E>(
   evaluate: LazyArg<Cause.Cause<E>>
 ): Effect.Effect<never, E, never> => flatMap(sync(evaluate), failCause)
-
-/* @internal */
-export const failCauseAnnotate = <E>(
-  evaluate: (annotate: <X>(cause: Cause.Cause<X>) => Cause.Cause<X>) => Cause.Cause<E>
-): Effect.Effect<never, E, never> => {
-  const effect = new EffectPrimitive(OpCodes.OP_FAILURE_WITH_ANNOTATION) as any
-  effect.i0 = evaluate
-  return effect
-}
 
 /* @internal */
 export const fiberId: Effect.Effect<never, never, FiberId.FiberId> = withFiberRuntime<never, never, FiberId.FiberId>((
@@ -2413,10 +2437,6 @@ export const exitSucceed = <A>(value: A): Exit.Exit<never, A> => {
   effect.i0 = value
   return effect
 }
-
-/** @internal */
-export const exitUnannotate = <E, A>(exit: Exit.Exit<E, A>): Exit.Exit<E, A> =>
-  exitIsSuccess(exit) ? exit : exitFailCause(internalCause.unannotate(exit.i0))
 
 /** @internal */
 export const exitUnit: Exit.Exit<never, void> = exitSucceed(void 0)

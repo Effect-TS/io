@@ -139,7 +139,7 @@ describe.concurrent("Effect", () => {
         Effect.exit
       )
 
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(Cause.IllegalArgumentException()))
+      assert.deepStrictEqual(result, Exit.die(Cause.IllegalArgumentException()))
     }))
   it.effect("forEach/discard - runs effects in order", () =>
     Effect.gen(function*($) {
@@ -226,7 +226,7 @@ describe.concurrent("Effect", () => {
           }), { concurrency: "unbounded" }),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(new Error("1")))
+      assert.deepStrictEqual(result, Exit.die(new Error("1")))
     }))
   it.effect("forEach/concurrency - returns results in the same order", () =>
     Effect.gen(function*($) {
@@ -438,7 +438,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const effects: ReadonlyArray<Effect.Effect<never, number, void>> = [Effect.unit, Effect.fail(1)]
       const result = yield* $(effects, Effect.mergeAll(void 0 as void, constVoid), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(1))
+      assert.deepStrictEqual(result, Exit.fail(1))
     }))
   it.effect("mergeAll/concurrency - return zero element on empty input", () =>
     Effect.gen(function*($) {
@@ -474,7 +474,7 @@ describe.concurrent("Effect", () => {
         }),
         Effect.exit
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+      assert.deepStrictEqual(result, Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("partition - collects only successes", () =>
     Effect.gen(function*($) {
@@ -587,7 +587,7 @@ describe.concurrent("Effect", () => {
   it.effect("reduce - with a failing step function returns a failed IO", () =>
     Effect.gen(function*($) {
       const result = yield* $([1, 2, 3, 4, 5], Effect.reduce(0, () => Effect.fail("fail")), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+      assert.deepStrictEqual(result, Exit.fail("fail"))
     }))
   it.effect("reduce - run sequentially from left to right", () =>
     Effect.gen(function*($) {
@@ -604,7 +604,7 @@ describe.concurrent("Effect", () => {
   it.effect("reduceRight - with a failing step function returns a failed IO", () =>
     Effect.gen(function*($) {
       const result = yield* $([1, 2, 3, 4, 5], Effect.reduceRight(0, () => Effect.fail("fail")), Effect.exit)
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail("fail"))
+      assert.deepStrictEqual(result, Exit.fail("fail"))
     }))
   it.effect("reduceRight - run sequentially from right to left", () =>
     Effect.gen(function*($) {
@@ -651,7 +651,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+      assert.deepStrictEqual(result, Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("reduceEffect/concurrency - return error if it exists in list", () =>
     Effect.gen(function*($) {
@@ -665,7 +665,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
+      assert.deepStrictEqual(result, Exit.failCause(Cause.parallel(Cause.empty, Cause.fail(1))))
     }))
   it.effect("takeUntil - happy path", () =>
     Effect.gen(function*($) {

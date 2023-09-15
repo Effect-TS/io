@@ -14,8 +14,7 @@ describe.concurrent("Effect", () => {
           Effect.succeed(1),
           Effect.validate(Effect.fail(2)),
           Effect.sandbox,
-          Effect.either,
-          Effect.map(Either.mapLeft(Cause.unannotate))
+          Effect.either
         )
       )
       assert.deepStrictEqual(result, Either.left(Cause.fail(2)))
@@ -27,8 +26,7 @@ describe.concurrent("Effect", () => {
           Effect.fail(1),
           Effect.validate(Effect.fail(2)),
           Effect.sandbox,
-          Effect.either,
-          Effect.map(Either.mapLeft(Cause.unannotate))
+          Effect.either
         )
       )
       assert.deepStrictEqual(result, Either.left(Cause.sequential(Cause.fail(1), Cause.fail(2))))

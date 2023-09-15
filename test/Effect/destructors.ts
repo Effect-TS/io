@@ -47,7 +47,7 @@ describe.concurrent("Effect", () => {
   it.effect("none - on Some fails with None", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.exit(Effect.none(Effect.succeed(Option.some(1)))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.none()))
+      assert.deepStrictEqual(result, Exit.fail(Option.none()))
     }))
   it.effect("none - on None succeeds with undefined", () =>
     Effect.gen(function*($) {
@@ -58,7 +58,7 @@ describe.concurrent("Effect", () => {
     Effect.gen(function*($) {
       const error = Cause.RuntimeException("failed task")
       const result = yield* $(Effect.exit(Effect.none(Effect.fail(error))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(Option.some(error)))
+      assert.deepStrictEqual(result, Exit.fail(Option.some(error)))
     }))
   it.effect("option - return success in Some", () =>
     Effect.gen(function*($) {
@@ -73,7 +73,7 @@ describe.concurrent("Effect", () => {
   it.effect("option - not catch throwable", () =>
     Effect.gen(function*($) {
       const result = yield* $(Effect.exit(Effect.option(Effect.die(ExampleError))))
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.die(ExampleError))
+      assert.deepStrictEqual(result, Exit.die(ExampleError))
     }))
   it.effect("option - catch throwable after sandboxing", () =>
     Effect.gen(function*($) {

@@ -31,7 +31,7 @@ import type { Pipeable } from "@effect/data/Pipeable"
 import type { Predicate } from "@effect/data/Predicate"
 import type * as FiberId from "@effect/io/FiberId"
 import * as internal from "@effect/io/internal/cause"
-import type { Span } from "@effect/io/Tracer"
+import { originalInstance } from "@effect/io/internal/core"
 
 /**
  * @since 1.0.0
@@ -106,28 +106,6 @@ export const InvalidHubCapacityExceptionTypeId: unique symbol = internal.Invalid
 export type InvalidHubCapacityExceptionTypeId = typeof InvalidHubCapacityExceptionTypeId
 
 /**
- * @since 1.0.0
- * @category symbols
- */
-export const SpanAnnotationTypeId: unique symbol = internal.SpanAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category symbols
- */
-export type SpanAnnotationTypeId = typeof SpanAnnotationTypeId
-
-/**
- * @since 1.0.0
- * @category annotations
- */
-export interface SpanAnnotation {
-  readonly _tag: "SpanAnnotation"
-  readonly [SpanAnnotationTypeId]: SpanAnnotationTypeId
-  readonly span: Span
-}
-
-/**
  * A `Cause` represents the full history of a failure resulting from running an
  * `Effect` workflow.
  *
@@ -144,7 +122,6 @@ export type Cause<E> =
   | Fail<E>
   | Die
   | Interrupt
-  | Annotated<E>
   | Sequential<E>
   | Parallel<E>
 
@@ -164,12 +141,6 @@ export declare namespace Cause {
 }
 
 /**
- * @since 1.0.0
- * @category stack
- */
-export const globalErrorSeq = internal.globalErrorSeq
-
-/**
  * Represents a set of methods that can be used to reduce a `Cause<E>` to a
  * specified value of type `Z` with access to a context of type `C`.
  *
@@ -181,7 +152,6 @@ export interface CauseReducer<C, E, Z> {
   readonly failCase: (context: C, error: E) => Z
   readonly dieCase: (context: C, defect: unknown) => Z
   readonly interruptCase: (context: C, fiberId: FiberId.FiberId) => Z
-  readonly annotatedCase: (context: C, value: Z, annotation: unknown) => Z
   readonly sequentialCase: (context: C, left: Z, right: Z) => Z
   readonly parallelCase: (context: C, left: Z, right: Z) => Z
 }
@@ -381,14 +351,6 @@ export const die: (defect: unknown) => Cause<never> = internal.die
 export const interrupt: (fiberId: FiberId.FiberId) => Cause<never> = internal.interrupt
 
 /**
- * Constructs a new `Annotated` cause from the specified `annotation`.
- *
- * @since 1.0.0
- * @category constructors
- */
-export const annotated: <E>(cause: Cause<E>, annotation: unknown) => Cause<E> = internal.annotated
-
-/**
  * Constructs a new `Parallel` cause from the specified `left` and `right`
  * causes.
  *
@@ -449,15 +411,6 @@ export const isDieType: <E>(self: Cause<E>) => self is Die = internal.isDieType
  * @category refinements
  */
 export const isInterruptType: <E>(self: Cause<E>) => self is Interrupt = internal.isInterruptType
-
-/**
- * Returns `true` if the specified `Cause` is an `Annotated` type, `false`
- * otherwise.
- *
- * @since 1.0.0
- * @category refinements
- */
-export const isAnnotatedType: <E>(self: Cause<E>) => self is Annotated<E> = internal.isAnnotatedType
 
 /**
  * Returns `true` if the specified `Cause` is a `Sequential` type, `false`
@@ -869,9 +822,9 @@ export const isRuntimeException: (u: unknown) => u is RuntimeException = interna
 export const pretty: <E>(cause: Cause<E>) => string = internal.pretty
 
 /**
- * Removes any annotation from the cause
+ * Returns the original, unproxied, instance of a thrown error
  *
  * @since 1.0.0
- * @category filtering
+ * @category errors
  */
-export const unannotate: <E>(cause: Cause<E>) => Cause<E> = internal.unannotate
+export const originalError: <E>(obj: E) => E = originalInstance

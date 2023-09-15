@@ -23,7 +23,7 @@ describe.concurrent("Effect", () => {
           Effect.exit
         )
       )
-      assert.deepStrictEqual(Exit.unannotate(result), Exit.fail(false))
+      assert.deepStrictEqual(result, Exit.fail(false))
     }))
   it.live("timeout a long computation with a cause", () =>
     Effect.gen(function*($) {
@@ -40,7 +40,7 @@ describe.concurrent("Effect", () => {
           Effect.flip
         )
       )
-      assert.deepStrictEqual(Cause.unannotate(result), cause)
+      assert.deepStrictEqual(result, cause)
     }))
   it.live("timeout repetition of uninterruptible effect", () =>
     Effect.gen(function*($) {
