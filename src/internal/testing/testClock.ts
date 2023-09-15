@@ -109,13 +109,17 @@ const suspendedWarning = "Warning: A test is advancing the test clock, " +
 /** @internal */
 export class TestClockImpl implements TestClock {
   [clock.ClockTypeId]: Clock.ClockTypeId = clock.ClockTypeId
+
   constructor(
     readonly clockState: Ref.Ref<Data.Data>,
     readonly live: Live.Live,
     readonly annotations: Annotations.Annotations,
     readonly warningState: Synchronized.SynchronizedRef<WarningData.WarningData>,
     readonly suspendedWarningState: Synchronized.SynchronizedRef<SuspendedWarningData.SuspendedWarningData>
-  ) {}
+  ) {
+    this.currentTimeMillis = core.map(ref.get(clockState), (data) => data.instant)
+    this.currentTimeNanos = core.map(ref.get(clockState), (data) => BigInt(data.instant * 1000000))
+  }
 
   /**
    * Unsafely returns the current time in milliseconds.
@@ -127,10 +131,12 @@ export class TestClockImpl implements TestClock {
   /**
    * Returns the current clock time in milliseconds.
    */
-  currentTimeMillis: Effect.Effect<never, never, number> = core.map(
-    ref.get(this.clockState),
-    (data) => data.instant
-  )
+  currentTimeMillis: Effect.Effect<never, never, number>
+
+  /**
+   * Returns the current clock time in nanoseconds.
+   */
+  currentTimeNanos: Effect.Effect<never, never, bigint>
 
   /**
    * Unsafely returns the current time in nanoseconds.
@@ -138,14 +144,6 @@ export class TestClockImpl implements TestClock {
   unsafeCurrentTimeNanos(): bigint {
     return BigInt(ref.unsafeGet(this.clockState).instant * 1000000)
   }
-
-  /**
-   * Returns the current clock time in nanoseconds.
-   */
-  currentTimeNanos: Effect.Effect<never, never, bigint> = core.map(
-    ref.get(this.clockState),
-    (data) => BigInt(data.instant * 1000000)
-  )
 
   /**
    * Saves the `TestClock`'s current state in an effect which, when run, will

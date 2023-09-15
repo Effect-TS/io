@@ -5,12 +5,9 @@ import * as TestEnvironment from "@effect/io/internal/testing/testEnvironment"
 import type * as TestServices from "@effect/io/internal/testing/testServices"
 import * as Schedule from "@effect/io/Schedule"
 import type * as Scope from "@effect/io/Scope"
-import type { TestAPI } from "vitest"
-import * as V from "vitest"
+import * as BunTest from "bun:test"
 
-export type API = TestAPI<{}>
-
-export const it: API = V.it
+export const it = BunTest.it.bind(BunTest)
 
 export const effect = (() => {
   const f = <E, A>(
@@ -26,7 +23,9 @@ export const effect = (() => {
           Effect.provideLayer(TestEnvironment.testContext()),
           Effect.runPromise
         ),
-      timeout
+      {
+        timeout
+      }
     )
   }
   return Object.assign(f, {
@@ -43,7 +42,9 @@ export const effect = (() => {
             Effect.provideLayer(TestEnvironment.testContext()),
             Effect.runPromise
           ),
-        timeout
+        {
+          timeout
+        }
       )
     },
     only: <E, A>(
@@ -59,7 +60,9 @@ export const effect = (() => {
             Effect.provideLayer(TestEnvironment.testContext()),
             Effect.runPromise
           ),
-        timeout
+        {
+          timeout
+        }
       )
     }
   })
@@ -77,7 +80,9 @@ export const live = <E, A>(
         Effect.suspend(self),
         Effect.runPromise
       ),
-    timeout
+    {
+      timeout
+    }
   )
 }
 
@@ -112,7 +117,9 @@ export const scoped = <E, A>(
         Effect.provideLayer(TestEnvironment.testContext()),
         Effect.runPromise
       ),
-    timeout
+    {
+      timeout
+    }
   )
 }
 
@@ -129,6 +136,8 @@ export const scopedLive = <E, A>(
         Effect.scoped,
         Effect.runPromise
       ),
-    timeout
+    {
+      timeout
+    }
   )
 }

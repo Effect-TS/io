@@ -1,0 +1,55 @@
+import * as Duration from "@effect/data/Duration"
+import * as Either from "@effect/data/Either"
+import { identity, pipe } from "@effect/data/Function"
+import * as Effect from "@effect/io/Effect"
+import * as TestClock from "@effect/io/internal/testing/testClock"
+import * as Ref from "@effect/io/Ref"
+import * as Cached from "@effect/io/Resource"
+import * as Schedule from "@effect/io/Schedule"
+import * as it from "@effect/io/test/utils/extend"
+import { describe } from "bun:test"
+import assert from "node:assert"
+
+describe("Resource", () => {
+  it.scoped("manual", () =>
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(0))
+      const cached = yield* $(Cached.manual(Ref.get(ref)))
+      const resul1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(Ref.set(ref, 1), Effect.zipRight(Cached.refresh(cached)), Effect.zipRight(Cached.get(cached)))
+      )
+      assert.strictEqual(resul1, 0)
+      assert.strictEqual(result2, 1)
+    }))
+  it.scoped("auto", () =>
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make(0))
+      const cached = yield* $(Cached.auto(Ref.get(ref), Schedule.spaced(Duration.millis(4))))
+      const result1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(
+          Ref.set(ref, 1),
+          Effect.zipRight(TestClock.adjust(Duration.millis(5))),
+          Effect.zipRight(Cached.get(cached))
+        )
+      )
+      assert.strictEqual(result1, 0)
+      assert.strictEqual(result2, 1)
+    }))
+  it.scopedLive("failed refresh doesn't affect cached value", () =>
+    Effect.gen(function*($) {
+      const ref = yield* $(Ref.make<Either.Either<string, number>>(Either.right(0)))
+      const cached = yield* $(Cached.auto(Effect.flatMap(Ref.get(ref), identity), Schedule.spaced(Duration.millis(4))))
+      const result1 = yield* $(Cached.get(cached))
+      const result2 = yield* $(
+        pipe(
+          Ref.set(ref, Either.left("Uh oh!")),
+          Effect.zipRight(Effect.sleep(Duration.millis(5))),
+          Effect.zipRight(Cached.get(cached))
+        )
+      )
+      assert.strictEqual(result1, 0)
+      assert.strictEqual(result2, 0)
+    }))
+})
