@@ -66,8 +66,7 @@ describe.concurrent("Scope", () => {
       const deferred = yield* $(Deferred.make<never, void>())
       const result = yield* $(
         Effect.addFinalizer(() => Deferred.succeed(deferred, void 0)),
-        Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred))),
-        Effect.parallelFinalizers,
+        Effect.zipRight(Effect.addFinalizer(() => Deferred.await(deferred)), { concurrent: true }),
         Effect.scoped,
         Effect.asUnit
       )

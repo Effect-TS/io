@@ -292,6 +292,7 @@ Added in v1.0.0
   - [acquireUseRelease](#acquireuserelease)
   - [addFinalizer](#addfinalizer)
   - [ensuring](#ensuring)
+  - [finalizersMask](#finalizersmask)
   - [onError](#onerror)
   - [onExit](#onexit)
   - [parallelFinalizers](#parallelfinalizers)
@@ -4939,6 +4940,20 @@ export declare const ensuring: {
 
 Added in v1.0.0
 
+## finalizersMask
+
+**Signature**
+
+```ts
+export declare const finalizersMask: (
+  strategy: ExecutionStrategy
+) => <R, E, A>(
+  self: (restore: <R1, E1, A1>(self: Effect<R1, E1, A1>) => Effect<R1, E1, A1>) => Effect<R, E, A>
+) => Effect<R, E, A>
+```
+
+Added in v1.0.0
+
 ## onError
 
 Runs the specified effect if this effect fails, providing the error to the
@@ -4988,7 +5003,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
+export declare const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0
@@ -5040,7 +5055,7 @@ parallel.
 **Signature**
 
 ```ts
-export declare const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A>
+export declare const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A>
 ```
 
 Added in v1.0.0

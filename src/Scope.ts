@@ -40,7 +40,7 @@ export type CloseableScopeTypeId = typeof CloseableScopeTypeId
  */
 export interface Scope extends Pipeable {
   readonly [ScopeTypeId]: ScopeTypeId
-
+  readonly strategy: ExecutionStrategy.ExecutionStrategy
   /**
    * @internal
    */
