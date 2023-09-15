@@ -17,7 +17,7 @@ import type { Concurrency } from "@effect/io/Concurrency"
 import type { ConfigProvider } from "@effect/io/ConfigProvider"
 import * as Deferred from "@effect/io/Deferred"
 import type * as Effect from "@effect/io/Effect"
-import type * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
+import * as ExecutionStrategy from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import * as FiberId from "@effect/io/FiberId"
@@ -1825,17 +1825,39 @@ export const forEachOptions = dual<
     if (options?.discard) {
       return concurrency.match(
         options,
-        () => requestBatchingEnabled ? forEachBatchedDiscard(self, f) : core.forEachSequentialDiscard(self, f),
-        () => forEachParUnboundedDiscard(self, f, requestBatchingEnabled),
-        (n) => forEachParNDiscard(self, n, f, requestBatchingEnabled)
+        () =>
+          finalizersMask(ExecutionStrategy.sequential)((restore) =>
+            requestBatchingEnabled
+              ? forEachBatchedDiscard(self, (a, i) => restore(f(a, i)))
+              : core.forEachSequentialDiscard(self, (a, i) => restore(f(a, i)))
+          ),
+        () =>
+          finalizersMask(ExecutionStrategy.parallel)((restore) =>
+            forEachParUnboundedDiscard(self, (a, i) => restore(f(a, i)), requestBatchingEnabled)
+          ),
+        (n) =>
+          finalizersMask(ExecutionStrategy.parallelN(n))((restore) =>
+            forEachParNDiscard(self, n, (a, i) => restore(f(a, i)), requestBatchingEnabled)
+          )
       )
     }
 
     return concurrency.match(
       options,
-      () => requestBatchingEnabled ? forEachParN(self, 1, f, true) : core.forEachSequential(self, f),
-      () => forEachParUnbounded(self, f, requestBatchingEnabled),
-      (n) => forEachParN(self, n, f, requestBatchingEnabled)
+      () =>
+        finalizersMask(ExecutionStrategy.sequential)((restore) =>
+          requestBatchingEnabled
+            ? forEachParN(self, 1, (a, i) => restore(f(a, i)), true)
+            : core.forEachSequential(self, (a, i) => restore(f(a, i)))
+        ),
+      () =>
+        finalizersMask(ExecutionStrategy.parallel)((restore) =>
+          forEachParUnbounded(self, (a, i) => restore(f(a, i)), requestBatchingEnabled)
+        ),
+      (n) =>
+        finalizersMask(ExecutionStrategy.parallelN(n))((restore) =>
+          forEachParN(self, n, (a, i) => restore(f(a, i)), requestBatchingEnabled)
+        )
     )
   }))
 
@@ -2456,13 +2478,68 @@ export const reduceEffect = dual<
   ))
 
 /* @internal */
-export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> =>
-  core.flatMap(scope, (outerScope) =>
-    core.flatMap(scopeMake(executionStrategy.parallel), (innerScope) =>
-      pipe(
-        outerScope.addFinalizer((exit) => innerScope.close(exit)),
-        core.zipRight(scopeExtend(self, innerScope))
-      )))
+export const parallelFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+  core.contextWithEffect((context) =>
+    Option.match(Context.getOption(context, scopeTag), {
+      onNone: () => self,
+      onSome: (scope) => {
+        switch (scope.strategy._tag) {
+          case "Parallel":
+            return self
+          case "Sequential":
+          case "ParallelN":
+            return core.flatMap(
+              core.scopeFork(scope, ExecutionStrategy.parallel),
+              (inner) => scopeExtend(self, inner)
+            )
+        }
+      }
+    })
+  )
+
+/* @internal */
+export const parallelNFinalizers =
+  (parallelism: number) => <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+    core.contextWithEffect((context) =>
+      Option.match(Context.getOption(context, scopeTag), {
+        onNone: () => self,
+        onSome: (scope) => {
+          if (scope.strategy._tag === "ParallelN" && scope.strategy.parallelism === parallelism) {
+            return self
+          }
+          return core.flatMap(
+            core.scopeFork(scope, ExecutionStrategy.parallelN(parallelism)),
+            (inner) => scopeExtend(self, inner)
+          )
+        }
+      })
+    )
+
+/* @internal */
+export const finalizersMask = (strategy: ExecutionStrategy.ExecutionStrategy) =>
+<R, E, A>(
+  self: (restore: <R1, E1, A1>(self: Effect.Effect<R1, E1, A1>) => Effect.Effect<R1, E1, A1>) => Effect.Effect<R, E, A>
+): Effect.Effect<R, E, A> =>
+  core.contextWithEffect((context) =>
+    Option.match(Context.getOption(context, scopeTag), {
+      onNone: () => self(identity),
+      onSome: (scope) => {
+        const patch = strategy._tag === "Parallel"
+          ? parallelFinalizers
+          : strategy._tag === "Sequential"
+          ? sequentialFinalizers
+          : parallelNFinalizers(strategy.parallelism)
+        switch (scope.strategy._tag) {
+          case "Parallel":
+            return patch(self(parallelFinalizers))
+          case "Sequential":
+            return patch(self(sequentialFinalizers))
+          case "ParallelN":
+            return patch(self(parallelNFinalizers(scope.strategy.parallelism)))
+        }
+      }
+    })
+  )
 
 /* @internal */
 export const scopeWith = <R, E, A>(
@@ -2474,12 +2551,23 @@ export const scopedEffect = <R, E, A>(effect: Effect.Effect<R, E, A>): Effect.Ef
   core.flatMap(scopeMake(), (scope) => scopeUse(scope)(effect))
 
 /* @internal */
-export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R | Scope.Scope, E, A> =>
-  scopeWith((scope) =>
-    pipe(
-      core.scopeFork(scope, executionStrategy.sequential),
-      core.flatMap((scope) => scopeExtend(scope)(self))
-    )
+export const sequentialFinalizers = <R, E, A>(self: Effect.Effect<R, E, A>): Effect.Effect<R, E, A> =>
+  core.contextWithEffect((context) =>
+    Option.match(Context.getOption(context, scopeTag), {
+      onNone: () => self,
+      onSome: (scope) => {
+        switch (scope.strategy._tag) {
+          case "Sequential":
+            return self
+          case "Parallel":
+          case "ParallelN":
+            return core.flatMap(
+              core.scopeFork(scope, ExecutionStrategy.sequential),
+              (inner) => scopeExtend(self, inner)
+            )
+        }
+      }
+    })
   )
 
 /* @internal */
@@ -2838,6 +2926,7 @@ export const scopeMake = (
   core.map(core.releaseMapMake, (rm): Scope.Scope.Closeable => ({
     [core.ScopeTypeId]: core.ScopeTypeId,
     [core.CloseableScopeTypeId]: core.CloseableScopeTypeId,
+    strategy,
     pipe() {
       return pipeArguments(this, arguments)
     },

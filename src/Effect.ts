@@ -24,6 +24,7 @@ import type { Config } from "@effect/io/Config"
 import type { ConfigError } from "@effect/io/ConfigError"
 import type { ConfigProvider } from "@effect/io/ConfigProvider"
 import type * as Deferred from "@effect/io/Deferred"
+import type { ExecutionStrategy } from "@effect/io/ExecutionStrategy"
 import type * as Exit from "@effect/io/Exit"
 import type * as Fiber from "@effect/io/Fiber"
 import type * as FiberId from "@effect/io/FiberId"
@@ -2382,8 +2383,15 @@ export const onExit: {
  * @since 1.0.0
  * @category scoping, resources & finalization
  */
-export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scope.Scope | R, E, A> =
-  fiberRuntime.parallelFinalizers
+export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> = fiberRuntime.parallelFinalizers
+
+/**
+ * @since 1.0.0
+ * @category scoping, resources & finalization
+ */
+export const finalizersMask: (strategy: ExecutionStrategy) => <R, E, A>(
+  self: (restore: <R1, E1, A1>(self: Effect<R1, E1, A1>) => Effect<R1, E1, A1>) => Effect<R, E, A>
+) => Effect<R, E, A> = fiberRuntime.finalizersMask
 
 /**
  * Returns a new scoped workflow that runs finalizers added to the scope of
@@ -2395,7 +2403,7 @@ export const parallelFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<Scop
  * @since 1.0.0
  * @category scoping, resources & finalization
  */
-export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R | Scope.Scope, E, A> =
+export const sequentialFinalizers: <R, E, A>(self: Effect<R, E, A>) => Effect<R, E, A> =
   fiberRuntime.sequentialFinalizers
 
 /**
