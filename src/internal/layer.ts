@@ -8,7 +8,7 @@ import * as Clock from "@effect/io/Clock"
 import type * as Effect from "@effect/io/Effect"
 import type * as Exit from "@effect/io/Exit"
 import type { FiberRef } from "@effect/io/FiberRef"
-import type * as FiberRefsPatch from "@effect/io/FiberRefsPatch"
+import * as FiberRefsPatch from "@effect/io/FiberRefsPatch"
 import * as core from "@effect/io/internal/core"
 import * as effect from "@effect/io/internal/effect"
 import * as circular from "@effect/io/internal/effect/circular"
@@ -17,6 +17,7 @@ import * as EffectOpCodes from "@effect/io/internal/opCodes/effect"
 import * as OpCodes from "@effect/io/internal/opCodes/layer"
 import * as ref from "@effect/io/internal/ref"
 import * as runtime from "@effect/io/internal/runtime"
+import * as runtimeFlags from "@effect/io/internal/runtimeFlags"
 import * as synchronized from "@effect/io/internal/synchronizedRef"
 import type * as Layer from "@effect/io/Layer"
 import type * as Runtime from "@effect/io/Runtime"
@@ -1115,12 +1116,67 @@ export const provideLayer = dual<
   ))
 
 /** @internal */
-export const provideSomeLayer: {
-  <R2, E2, A2>(
-    layer: Layer.Layer<R2, E2, A2>
-  ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
-  <R, E, A, R2, E2, A2>(
+export const provideSomeRuntime: {
+  <R>(context: Runtime.Runtime<R>): <R1, E, A>(self: Effect.Effect<R1, E, A>) => Effect.Effect<Exclude<R1, R>, E, A>
+  <R, R1, E, A>(self: Effect.Effect<R1, E, A>, context: Runtime.Runtime<R>): Effect.Effect<Exclude<R1, R>, E, A>
+} = dual<
+  <R>(context: Runtime.Runtime<R>) => <R1, E, A>(self: Effect.Effect<R1, E, A>) => Effect.Effect<Exclude<R1, R>, E, A>,
+  <R, R1, E, A>(self: Effect.Effect<R1, E, A>, context: Runtime.Runtime<R>) => Effect.Effect<Exclude<R1, R>, E, A>
+>(2, (self, rt) => {
+  const patchFlags = runtimeFlags.diff(runtime.defaultRuntime.runtimeFlags, rt.runtimeFlags)
+  const inversePatchFlags = runtimeFlags.diff(rt.runtimeFlags, runtime.defaultRuntime.runtimeFlags)
+  const patchRefs = FiberRefsPatch.diff(runtime.defaultRuntime.fiberRefs, rt.fiberRefs)
+  const inversePatchRefs = FiberRefsPatch.diff(rt.fiberRefs, runtime.defaultRuntime.fiberRefs)
+  return core.acquireUseRelease(
+    core.flatMap(
+      core.updateRuntimeFlags(patchFlags),
+      () => effect.patchFiberRefs(patchRefs)
+    ),
+    () => core.provideSomeContext(self, rt.context),
+    () =>
+      core.flatMap(
+        core.updateRuntimeFlags(inversePatchFlags),
+        () => effect.patchFiberRefs(inversePatchRefs)
+      )
+  )
+})
+
+/** @internal */
+export const effect_provide = dual<
+  {
+    <R2, E2, A2>(
+      layer: Layer.Layer<R2, E2, A2>
+    ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
+    <R2>(
+      context: Context.Context<R2>
+    ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, R2>, E, A>
+    <R2>(
+      runtime: Runtime.Runtime<R2>
+    ): <R, E, A>(self: Effect.Effect<R, E, A>) => Effect.Effect<Exclude<R, R2>, E, A>
+  },
+  {
+    <R, E, A, R2, E2, A2>(
+      self: Effect.Effect<R, E, A>,
+      layer: Layer.Layer<R2, E2, A2>
+    ): Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
+    <R, E, A, R2>(
+      self: Effect.Effect<R, E, A>,
+      context: Context.Context<R2>
+    ): Effect.Effect<Exclude<R, R2>, E, A>
+    <R, E, A, R2>(
+      self: Effect.Effect<R, E, A>,
+      runtime: Runtime.Runtime<R2>
+    ): Effect.Effect<Exclude<R, R2>, E, A>
+  }
+>(
+  2,
+  <R, E, A, R2>(
     self: Effect.Effect<R, E, A>,
-    layer: Layer.Layer<R2, E2, A2>
-  ): Effect.Effect<R2 | Exclude<R, A2>, E | E2, A>
-} = dual(2, (self, layer) => provideLayer(self, merge(context(), layer)))
+    source: Layer.Layer<any, any, R2> | Context.Context<R2> | Runtime.Runtime<R2>
+  ): Effect.Effect<Exclude<R, R2>, any, any> =>
+    isLayer(source)
+      ? provideLayer(self as any, merge(context(), source as Layer.Layer<any, any, R2>))
+      : Context.isContext(source)
+      ? core.provideSomeContext(self, source)
+      : provideSomeRuntime(self, source as Runtime.Runtime<R2>)
+)

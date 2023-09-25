@@ -11,7 +11,7 @@ const program = pipe(
   }),
   Effect.flatMap((chunk) => Effect.sync(() => console.log(Array.from(chunk)))),
   Effect.tapErrorCause(Effect.logError),
-  Effect.provideLayer(Logger.minimumLogLevel(Level.Debug))
+  Effect.provide(Logger.minimumLogLevel(Level.Debug))
 )
 
 Effect.runFork(program)

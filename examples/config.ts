@@ -32,7 +32,7 @@ export const program = Effect.gen(function*($) {
 
 pipe(
   program,
-  Effect.provideSomeLayer(HttpServerLive),
+  Effect.provide(HttpServerLive),
   Effect.catchAllCause(Effect.logError),
   Effect.runFork
 )

@@ -22,7 +22,7 @@ const program = Effect.gen(function*($) {
 
 const main = pipe(
   program,
-  Effect.provideSomeLayer(Logger.replace(Logger.defaultLogger, customLogger))
+  Effect.provide(Logger.replace(Logger.defaultLogger, customLogger))
 )
 
 Effect.runFork(main)
