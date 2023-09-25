@@ -21,7 +21,7 @@ const program2 = Logger.withMinimumLogLevel(LogLevel.Info)(
 
 const main = pipe(
   Effect.all([program1, program2], { discard: true }),
-  Effect.provideSomeLayer(Logger.minimumLogLevel(LogLevel.Info))
+  Effect.provide(Logger.minimumLogLevel(LogLevel.Info))
 )
 
 Effect.runFork(main)
