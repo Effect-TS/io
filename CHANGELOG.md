@@ -1,5 +1,25 @@
 # @effect/io
 
+## 0.41.0
+
+### Minor Changes
+
+- [#663](https://github.com/Effect-TS/io/pull/663) [`3d5dd6f`](https://github.com/Effect-TS/io/commit/3d5dd6fd12f70e05dc049f7a40d1764c99e51172) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Remove Cause.annotated, add spans to error objects
+
+- [#674](https://github.com/Effect-TS/io/pull/674) [`5ad5367`](https://github.com/Effect-TS/io/commit/5ad53677a9f2470ad4de5c13adf3e2a7ae9e361a) Thanks [@tim-smart](https://github.com/tim-smart)! - consolidate provide\* apis for Layer/Context/Runtime
+
+- [#671](https://github.com/Effect-TS/io/pull/671) [`4c1cdc3`](https://github.com/Effect-TS/io/commit/4c1cdc347acabe85f50358f52a2ac79d6e5c3a4a) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Inherit concurrency of finalizers from parallel combinators
+
+### Patch Changes
+
+- [#675](https://github.com/Effect-TS/io/pull/675) [`075219f`](https://github.com/Effect-TS/io/commit/075219f99d5234125b325525791ae01c2defa02d) Thanks [@tim-smart](https://github.com/tim-smart)! - fix missing fiber on AsyncFiberException
+
+- [#662](https://github.com/Effect-TS/io/pull/662) [`c43d4aa`](https://github.com/Effect-TS/io/commit/c43d4aabef9bc75d7ac2103c13f6cc7a7fce6351) Thanks [@fubhy](https://github.com/fubhy)! - Added `Scheduler` hotfix for Bun
+
+- [#673](https://github.com/Effect-TS/io/pull/673) [`794f757`](https://github.com/Effect-TS/io/commit/794f757237dd01e72bca9c7e945c18e757c444e3) Thanks [@tim-smart](https://github.com/tim-smart)! - fix withSpanScoped ending span
+
+- [#672](https://github.com/Effect-TS/io/pull/672) [`be3c23f`](https://github.com/Effect-TS/io/commit/be3c23f02b889ab32542bbfc4c40a2cff5f389db) Thanks [@tim-smart](https://github.com/tim-smart)! - support Refinements in \*Until apis
+
 ## 0.40.3
 
 ### Patch Changes
