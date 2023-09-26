@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.41.1
+
+### Patch Changes
+
+- [#676](https://github.com/Effect-TS/io/pull/676) [`c11228f`](https://github.com/Effect-TS/io/commit/c11228f085efae078247c13186819925ad20afa0) Thanks [@fubhy](https://github.com/fubhy)! - Fix regression introduced by Bun `setTimeout` hotfix
+
 ## 0.41.0
 
 ### Minor Changes
