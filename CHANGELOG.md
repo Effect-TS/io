@@ -1,5 +1,11 @@
 # @effect/io
 
+## 0.41.2
+
+### Patch Changes
+
+- [#678](https://github.com/Effect-TS/io/pull/678) [`d1bf3e7`](https://github.com/Effect-TS/io/commit/d1bf3e7130211dd28f3cc0badcb6d5cd20b2623d) Thanks [@mikearnaldi](https://github.com/mikearnaldi)! - Avoid loops while yielding
+
 ## 0.41.1
 
 ### Patch Changes
