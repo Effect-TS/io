@@ -1843,6 +1843,24 @@ export const serviceFunctions = <I, S>(
 export const serviceConstants = <I, S>(
   tag: Context.Tag<I, S>
 ): {
+  [
+    k in {
+      [k in keyof S]: S[k] extends Effect.Effect<any, any, any> ? never
+        : S[k] extends (...args: any) => Effect.Effect<any, any, any> ? never
+        : k
+    }[keyof S]
+  ]: Effect.Effect<I, never, S[k]>
+} =>
+  new Proxy({} as any, {
+    get(_target: any, prop: any, _receiver) {
+      return core.map(tag, (s: any) => s[prop])
+    }
+  })
+
+/** @internal */
+export const serviceEffects = <I, S>(
+  tag: Context.Tag<I, S>
+): {
   [k in { [k in keyof S]: S[k] extends Effect.Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends
     Effect.Effect<infer R, infer E, infer A> ? Effect.Effect<R | I, E, A> : never
 } =>
@@ -1851,23 +1869,6 @@ export const serviceConstants = <I, S>(
       return core.flatMap(tag, (s: any) => s[prop])
     }
   })
-
-/** @internal */
-export const serviceMembers = <I, S>(tag: Context.Tag<I, S>): {
-  functions: {
-    [k in { [k in keyof S]: S[k] extends (...args: Array<any>) => Effect.Effect<any, any, any> ? k : never }[keyof S]]:
-      S[k] extends (...args: infer Args) => Effect.Effect<infer R, infer E, infer A>
-        ? (...args: Args) => Effect.Effect<R | I, E, A>
-        : never
-  }
-  constants: {
-    [k in { [k in keyof S]: S[k] extends Effect.Effect<any, any, any> ? k : never }[keyof S]]: S[k] extends
-      Effect.Effect<infer R, infer E, infer A> ? Effect.Effect<R | I, E, A> : never
-  }
-} => ({
-  functions: serviceFunctions(tag),
-  constants: serviceConstants(tag)
-})
 
 // -----------------------------------------------------------------------------
 // tracing
