@@ -236,9 +236,18 @@ class QueueImpl<A> implements Queue.Queue<A> {
               core.interrupt :
               core.deferredAwait(deferred)
           }),
-          core.onInterrupt(() => {
-            return core.sync(() => unsafeRemove(this.takers, deferred))
-          })
+          core.onInterrupt(() =>
+            core.flatMap(
+              core.suspend(() => {
+                unsafeRemove(this.takers, deferred)
+                return core.deferredPoll(deferred)
+              }),
+              (effect) =>
+                effect._tag === "Some" ?
+                  core.flatMap(effect.value, (a) => this.offer(a))
+                  : core.unit
+            )
+          )
         )
       }
     })
@@ -282,7 +291,7 @@ class QueueImpl<A> implements Queue.Queue<A> {
 
 /** @internal */
 const takeRemainderLoop = <A>(
-  self: Queue.Dequeue<A>,
+  self: Queue.Queue<A>,
   min: number,
   max: number,
   acc: Chunk.Chunk<A>
@@ -294,10 +303,12 @@ const takeRemainderLoop = <A>(
     takeUpTo(self, max),
     core.flatMap((bs) => {
       const remaining = min - bs.length
+      acc = Chunk.appendAll(acc, bs)
       if (remaining === 1) {
         return pipe(
           take(self),
-          core.map((b) => pipe(acc, Chunk.appendAll(bs), Chunk.append(b)))
+          core.map((b) => Chunk.append(acc, b)),
+          core.onInterrupt(() => offerAll(self, acc))
         )
       }
       if (remaining > 1) {
@@ -308,12 +319,13 @@ const takeRemainderLoop = <A>(
               self,
               remaining - 1,
               max - bs.length - 1,
-              pipe(acc, Chunk.appendAll(bs), Chunk.append(b))
+              Chunk.append(acc, b)
             )
-          )
+          ),
+          core.onInterrupt(() => offerAll(self, acc))
         )
       }
-      return core.succeed(pipe(acc, Chunk.appendAll(bs)))
+      return core.succeed(acc)
     })
   )
 }
